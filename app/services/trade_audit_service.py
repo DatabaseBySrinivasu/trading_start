@@ -461,9 +461,8 @@ class TradeAuditService:
                     mark_closed = True
                     is_success = False
 
-            # D. SHARP TREND REVERSAL / BREAKOUT TRAP (SMC / Momentum Invalidation)
+            # D. SHARP TREND REVERSAL / BREAKOUT TRAP / EMA & SUPERTREND FLIP
             if not correction_type and not mark_closed:
-                # Fetch fresh pattern & momentum confluence
                 try:
                     df = market_data_service.get_historical_candles(sym, period="5d", interval="15m")
                     if df is not None and not df.empty:
@@ -472,23 +471,59 @@ class TradeAuditService:
                         mom_score = float(pam.get("momentum_score", 0.0))
                         bos = str(pam.get("bos_status", ""))
 
-                        # Call invalidated by sharp bearish breakout
-                        if is_call and (mom_score <= -30.0 or "BEARISH_BOS" in bos):
-                            correction_type = "TREND_REVERSAL_EXIT"
-                            correction_reason = f"Bearish trend reversal confirmed: {bos} with strong selling momentum ({mom_score})."
-                            action_directive = "⚠️ EXIT CALL POSITION IMMEDIATELY. Bullish structure invalidated."
-                            alert["status"] = "REVERSED_INVALIDATED"
-                            mark_closed = True
-                            is_success = False
+                        # Technical indicators check (Supertrend & EMA 9/21)
+                        indicators = pattern_service.calculate_indicators(df)
+                        st_signal = str(indicators.get("supertrend_signal", "")).upper()
+                        ema_9 = float(indicators.get("ema_9", 0.0))
+                        ema_21 = float(indicators.get("ema_21", 0.0))
 
-                        # Put invalidated by sharp bullish breakout
-                        elif is_put and (mom_score >= 30.0 or "BULLISH_BOS" in bos):
-                            correction_type = "TREND_REVERSAL_EXIT"
-                            correction_reason = f"Bullish trend reversal confirmed: {bos} with strong buying momentum (+{mom_score})."
-                            action_directive = "⚠️ EXIT PUT POSITION IMMEDIATELY. Bearish structure invalidated."
-                            alert["status"] = "REVERSED_INVALIDATED"
-                            mark_closed = True
-                            is_success = False
+                        # Call invalidated by sharp bearish breakout, Supertrend flip to BEARISH, or EMA 9 < 21 death cross
+                        if is_call:
+                            if st_signal == "BEARISH":
+                                correction_type = "TREND_REVERSAL_EXIT"
+                                correction_reason = f"Supertrend flipped BEARISH (Trailing Resistance: ₹{indicators.get('supertrend', 0.0):,.2f}). Upward trend broken."
+                                action_directive = "🚨 EXIT CALL POSITION IMMEDIATELY. Trend has reversed BEARISH."
+                                alert["status"] = "REVERSED_INVALIDATED"
+                                mark_closed = True
+                                is_success = False
+                            elif mom_score <= -30.0 or "BEARISH_BOS" in bos or "BEARISH_CHOCH" in bos:
+                                correction_type = "TREND_REVERSAL_EXIT"
+                                correction_reason = f"Bearish structure break confirmed: {bos} with heavy selling momentum ({mom_score:.1f})."
+                                action_directive = "🚨 EXIT CALL POSITION IMMEDIATELY. Bullish structure invalidated."
+                                alert["status"] = "REVERSED_INVALIDATED"
+                                mark_closed = True
+                                is_success = False
+                            elif ema_9 > 0 and ema_21 > 0 and ema_9 < ema_21 and cur_spot < ema_21:
+                                correction_type = "TREND_REVERSAL_EXIT"
+                                correction_reason = f"EMA 9/21 Bearish Cross confirmed (9 EMA: ₹{ema_9:,.2f} < 21 EMA: ₹{ema_21:,.2f})."
+                                action_directive = "🚨 EXIT CALL POSITION IMMEDIATELY. Short-term trend flipped downward."
+                                alert["status"] = "REVERSED_INVALIDATED"
+                                mark_closed = True
+                                is_success = False
+
+                        # Put invalidated by sharp bullish breakout, Supertrend flip to BULLISH, or EMA 9 > 21 golden cross
+                        elif is_put:
+                            if st_signal == "BULLISH":
+                                correction_type = "TREND_REVERSAL_EXIT"
+                                correction_reason = f"Supertrend flipped BULLISH (Trailing Support: ₹{indicators.get('supertrend', 0.0):,.2f}). Downward trend broken."
+                                action_directive = "🚨 EXIT PUT POSITION IMMEDIATELY. Trend has reversed BULLISH."
+                                alert["status"] = "REVERSED_INVALIDATED"
+                                mark_closed = True
+                                is_success = False
+                            elif mom_score >= 30.0 or "BULLISH_BOS" in bos or "BULLISH_CHOCH" in bos:
+                                correction_type = "TREND_REVERSAL_EXIT"
+                                correction_reason = f"Bullish structure break confirmed: {bos} with strong buying momentum (+{mom_score:.1f})."
+                                action_directive = "🚨 EXIT PUT POSITION IMMEDIATELY. Bearish structure invalidated."
+                                alert["status"] = "REVERSED_INVALIDATED"
+                                mark_closed = True
+                                is_success = False
+                            elif ema_9 > 0 and ema_21 > 0 and ema_9 > ema_21 and cur_spot > ema_21:
+                                correction_type = "TREND_REVERSAL_EXIT"
+                                correction_reason = f"EMA 9/21 Bullish Cross confirmed (9 EMA: ₹{ema_9:,.2f} > 21 EMA: ₹{ema_21:,.2f})."
+                                action_directive = "🚨 EXIT PUT POSITION IMMEDIATELY. Short-term trend flipped upward."
+                                alert["status"] = "REVERSED_INVALIDATED"
+                                mark_closed = True
+                                is_success = False
                 except Exception as ex:
                     logger.debug(f"Reversal check skipped for {sym}: {ex}")
 
@@ -601,7 +636,18 @@ class TradeAuditService:
         ist_time = corr_event["ist_time"]
         corr_type = corr_event["type"]
 
-        badge_icon = "🎯 PROFIT TARGET REACHED" if corr_event["is_success"] else "⚠️ TRADE RE-CORRECTION / EXIT NOTICE"
+        if corr_type == "TREND_REVERSAL_EXIT":
+            badge_icon = "🚨 URGENT: IMMEDIATE EXIT (TREND REVERSED)"
+        elif corr_type == "STOP_LOSS_EXIT":
+            badge_icon = "🛑 STOP LOSS HIT: EXIT IMMEDIATELY"
+        elif corr_type == "TARGET_2_ACHIEVED":
+            badge_icon = "🏆 FULL PROFIT BOOKED (TARGET 2 REACHED)"
+        elif corr_type == "TARGET_1_HIT_TRAIL_SL":
+            badge_icon = "🎯 TARGET 1 HIT: BOOK 70% & TRAIL SL TO COST"
+        elif corr_event.get("is_success"):
+            badge_icon = "🎯 PROFIT TARGET REACHED"
+        else:
+            badge_icon = "⚠️ TRADE RE-CORRECTION / EXIT NOTICE"
 
         # 1. Telegram HTML Message
         tg_html = (

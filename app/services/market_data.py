@@ -298,6 +298,15 @@ class MarketDataService:
                     self._price_cache[canon] = {"data": updated_entry, "_timestamp": now}
                     self._price_cache[sym] = {"data": updated_entry, "_timestamp": now}
 
+                # 3. Autonomous active trade audit & trend reversal monitoring (checks active trades every 3s)
+                if int(now) % 3 == 0:
+                    try:
+                        from app.services.trade_audit_service import trade_audit_service
+                        if trade_audit_service.active_alerts:
+                            trade_audit_service.check_and_self_correct(force_dispatch=True)
+                    except Exception as audit_err:
+                        logger.debug(f"Live audit monitoring error: {audit_err}")
+
             except Exception as e:
                 logger.debug(f"Live ticker loop warning: {e}")
 
