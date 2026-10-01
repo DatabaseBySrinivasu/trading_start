@@ -1,0 +1,3409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NSE & BSE Quant Terminal | QuantPulse India Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #070B14;
+      --bg-card: #0F172A;
+      --bg-card-hover: #1E293B;
+      --bg-input: #0A0F1D;
+      --border-subtle: #1E293B;
+      --border-bright: #334155;
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --accent-blue: #38BDF8;
+      --accent-green: #10B981;
+      --accent-red: #EF4444;
+      --accent-gold: #F59E0B;
+      --accent-purple: #A855F7;
+      --accent-cyan: #06B6D4;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1720px;
+      margin: 0 auto;
+    }
+
+    /* Header & Navigation */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #38BDF8, #6366F1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 20px;
+      color: white;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+    }
+
+    .brand-title h1 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .refresh-controller {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #0D1527;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-green);
+      animation: pulse-dot 1s infinite alternate;
+    }
+
+    @keyframes pulse-dot {
+      0% { opacity: 0.3; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1.15); }
+    }
+
+    .refresh-select {
+      background: transparent;
+      border: none;
+      color: var(--accent-blue);
+      font-weight: 700;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-blue);
+    }
+
+    .btn-primary {
+      background: #0284C7;
+      border-color: #0284C7;
+      color: white;
+    }
+    .btn-primary:hover { background: #0369A1; }
+
+    .btn-green { background: var(--accent-green); border-color: var(--accent-green); color: #022013; font-weight: 700; }
+    .btn-green:hover { background: #059669; }
+
+    .btn-red { background: var(--accent-red); border-color: var(--accent-red); color: white; font-weight: 700; }
+    .btn-red:hover { background: #DC2626; }
+
+    /* Breaking News Ticker */
+    .news-ticker-container {
+      display: flex;
+      align-items: center;
+      background: #0A101D;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 6px 14px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      font-size: 12px;
+    }
+
+    .ticker-tag {
+      background: #EF4444;
+      color: white;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      text-transform: uppercase;
+      margin-right: 12px;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+    }
+
+    .ticker-content {
+      white-space: nowrap;
+      overflow: hidden;
+      display: flex;
+      width: 100%;
+    }
+
+    .ticker-scroll {
+      display: inline-block;
+      animation: ticker-animation 45s linear infinite;
+    }
+
+    @keyframes ticker-animation {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+
+    .ticker-item {
+      display: inline-block;
+      margin-right: 32px;
+      color: #CBD5E1;
+    }
+
+    .ticker-item b {
+      color: var(--accent-blue);
+    }
+
+    /* Volatility Cockpit: INDIA VIX & GIFT NIFTY */
+    .volatility-cockpit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .vix-cockpit-card, .gift-cockpit-card {
+      background: linear-gradient(135deg, #0C1322 0%, #070B14 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      position: relative;
+    }
+
+    .cockpit-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .cockpit-val-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .cockpit-big-val {
+      font-size: 24px;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .cockpit-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .cockpit-desc {
+      font-size: 11px;
+      color: #94A3B8;
+      line-height: 1.4;
+    }
+
+    .global-cues-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .global-pill {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(51, 65, 85, 0.6);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* AI News Sentiment & Strategy Suggestion Banner */
+    .news-intel-banner {
+      background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.8));
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .news-intel-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .sentiment-meter-badge {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .news-suggestion-text {
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.4;
+      color: #E2E8F0;
+    }
+
+    /* Primary CALL/PUT Cards Grid (3-Column for NIFTY, BANK NIFTY, SENSEX) */
+    .signal-header-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .signal-card {
+      background: linear-gradient(180deg, #0F172A 0%, #090E1A 100%);
+      border: 2px solid var(--border-subtle);
+      border-radius: var(--radius);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .signal-card.bullish {
+      border-color: rgba(16, 185, 129, 0.7);
+      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.15);
+    }
+
+    .signal-card.bearish {
+      border-color: rgba(239, 68, 68, 0.7);
+      box-shadow: 0 8px 30px rgba(239, 68, 68, 0.15);
+    }
+
+    .sig-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .sig-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .rec-badge {
+      font-size: 13px;
+      font-weight: 900;
+      padding: 4px 12px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rec-badge.call {
+      background: var(--accent-green);
+      color: #022013;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .rec-badge.put {
+      background: var(--accent-red);
+      color: white;
+      box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+    }
+
+    .rec-badge.neutral {
+      background: var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    .spot-price-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .spot-price {
+      font-size: 24px;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .strike-tag {
+      background: rgba(168, 85, 247, 0.2);
+      color: #D8B4FE;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Option Execution vs Spot Levels Box */
+    .option-pricing-box {
+      background: #0A101E;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    .option-pricing-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .levels-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .level-box {
+      background: #060A14;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 6px;
+      text-align: center;
+    }
+
+    .level-box-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .level-box-val {
+      font-size: 13px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 2px;
+    }
+
+    .level-box-val.entry-val { color: var(--accent-blue); }
+    .level-box-val.positive { color: var(--accent-green); }
+    .level-box-val.negative { color: var(--accent-red); }
+
+    .lot-details-bar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: rgba(30, 41, 59, 0.5);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .spot-levels-box {
+      background: #070D18;
+      border: 1px dashed var(--border-subtle);
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-bottom: 10px;
+    }
+
+    .spot-levels-title {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .spot-levels-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Feature strips */
+    .feature-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #070B14;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+
+    .feature-chip {
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .pattern-badges-container {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin: 8px 0;
+    }
+
+    .pattern-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .pattern-bullish { background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .pattern-bearish { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .pattern-neutral { background: rgba(148, 163, 184, 0.2); color: #CBD5E1; border: 1px solid rgba(148, 163, 184, 0.4); }
+    .pattern-smc { background: rgba(168, 85, 247, 0.2); color: #D8B4FE; border: 1px solid rgba(168, 85, 247, 0.4); }
+
+    .checklist {
+      list-style: none;
+      font-size: 11px;
+      color: #CBD5E1;
+      margin-top: 6px;
+    }
+
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin-bottom: 4px;
+      line-height: 1.35;
+    }
+
+    /* Commodities Section */
+    .commodities-section {
+      background: linear-gradient(180deg, #0B1323 0%, #080D1A 100%);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-bottom: 20px;
+    }
+
+    .commodities-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .commodities-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .commodities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 14px;
+    }
+
+    .commodity-card {
+      background: #080F1D;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 14px;
+      transition: all 0.2s;
+    }
+
+    .commodity-card:hover {
+      border-color: rgba(245, 158, 11, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .commodity-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .commodity-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: white;
+    }
+
+    .commodity-price-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .commodity-price {
+      font-size: 20px;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Main Grid & Tables */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 1080px) {
+      .main-grid, .volatility-cockpit-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      letter-spacing: -0.2px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      background: var(--bg-input);
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-subtle);
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.4);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: var(--bg-card-hover);
+    }
+
+    .num-mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+
+    .positive { color: var(--accent-green); }
+    .negative { color: var(--accent-red); }
+
+    .signal-tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .signal-buy { background: rgba(16, 185, 129, 0.2); color: #34D399; }
+    .signal-sell { background: rgba(239, 68, 68, 0.2); color: #F87171; }
+    .signal-hold { background: rgba(148, 163, 184, 0.2); color: #CBD5E1; }
+
+    /* Search Input Box */
+    .search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .input-text {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: white;
+      font-size: 13px;
+      outline: none;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .input-text:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+    }
+
+    /* News Grid */
+    .news-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 8px;
+    }
+
+    .news-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .news-tab.active {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 12px;
+    }
+
+    .news-item-card {
+      background: #080D1A;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .news-title-link {
+      color: #F1F5F9;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      line-height: 1.4;
+    }
+
+    .news-title-link:hover {
+      color: var(--accent-blue);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0F172A;
+      border: 1px solid var(--accent-blue);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      display: none;
+      z-index: 9999;
+      font-size: 13px;
+    }
+
+    /* Telegram Modal & Badges */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(8px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+
+    .modal-box {
+      background: #0D1527;
+      border: 1px solid var(--accent-blue);
+      border-radius: 14px;
+      width: 95%;
+      max-width: 620px;
+      padding: 22px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+      position: relative;
+    }
+
+    /* 21-Factor Institutional Confluence Radar */
+    .institutional-section {
+      background: linear-gradient(180deg, #0B1226 0%, #060914 100%);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    .inst-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .inst-symbol-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .inst-sym-btn {
+      background: #0D1629;
+      border: 1px solid var(--border-subtle);
+      color: #94A3B8;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.2s ease;
+    }
+
+    .inst-sym-btn:hover {
+      background: #1E293B;
+      color: #F8FAFC;
+    }
+
+    .inst-sym-btn.active {
+      background: linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%);
+      border-color: #A855F7;
+      color: #FFFFFF;
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+    }
+
+    .inst-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .inst-kpi-card {
+      background: #070D1A;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .inst-kpi-title {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .inst-kpi-val {
+      font-size: 15px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .inst-matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 10px;
+    }
+
+    .inst-factor-card {
+      background: #080E1C;
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+
+    .inst-factor-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: #0C152B;
+    }
+
+    .inst-factor-card.status-pass {
+      border-left: 3px solid #10B981;
+    }
+
+    .inst-factor-card.status-watch {
+      border-left: 3px solid #F59E0B;
+    }
+
+    .inst-factor-card.status-fail {
+      border-left: 3px solid #EF4444;
+    }
+
+    .inst-factor-card.status-neutral {
+      border-left: 3px solid #64748B;
+    }
+
+    .inst-factor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .inst-factor-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .badge-pass { background: rgba(16, 185, 129, 0.2); color: #34D399; }
+    .badge-watch { background: rgba(245, 158, 11, 0.2); color: #FBBF24; }
+    .badge-fail { background: rgba(239, 68, 68, 0.2); color: #F87171; }
+    .badge-neutral { background: rgba(100, 116, 139, 0.2); color: #94A3B8; }
+
+    .inst-factor-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #38BDF8;
+    }
+
+    .inst-factor-desc {
+      font-size: 11px;
+      color: #94A3B8;
+      line-height: 1.35;
+    }
+
+    /* Audit & Self-Correction Engine */
+    .audit-section {
+      background: linear-gradient(180deg, #09101F 0%, #060A14 100%);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .audit-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .audit-stat-card {
+      background: #060B16;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .audit-stat-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .audit-stat-val {
+      font-size: 18px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .audit-split-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .audit-split-grid { grid-template-columns: 1fr; }
+    }
+
+    .audit-terminal {
+      background: #04070F;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #94A3B8;
+      height: 180px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+
+    .correction-item {
+      background: #080E1C;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .correction-item.success-item {
+      border-color: rgba(16, 185, 129, 0.3);
+      background: #06151E;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      font-size: 20px;
+      color: var(--text-muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+    .modal-close:hover { color: white; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">⚡</div>
+      <div class="brand-title">
+        <h1>QuantPulse India <span style="font-size: 11px; background: rgba(56, 189, 248, 0.2); color: #38BDF8; padding: 2px 6px; border-radius: 4px; font-weight: 700;">PRO</span></h1>
+        <p>NSE & BSE Quant Terminal • MCX Commodities • SMC Order Blocks • GIFT NIFTY (100% Free)</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Market Session & Min 5 Pts Filter Badge -->
+      <div id="market-hours-badge" style="display: inline-flex; align-items: center; gap: 6px; background: #0D1527; border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace;" title="Indian Market Hours: NSE/BSE 09:15-15:30 IST | MCX 09:00-23:30 IST • Min 5 Pts Filter Active">
+        <span id="market-session-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #94A3B8;"></span>
+        <span id="market-session-text" style="color: #94A3B8;">Market: Checking...</span>
+      </div>
+
+      <!-- Telegram Status / Control Button -->
+      <button class="btn" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); color: #38BDF8; font-weight: 700;" onclick="openTelegramModal()">
+        📱 Telegram: 9100040008
+      </button>
+
+      <!-- Instagram Status / Control Button -->
+      <button class="btn" style="background: linear-gradient(135deg, rgba(225, 48, 108, 0.2), rgba(131, 58, 180, 0.2)); border-color: rgba(225, 48, 108, 0.5); color: #FB7185; font-weight: 700;" onclick="openInstagramModal()">
+        📸 Instagram: 9100040008
+      </button>
+
+      <!-- Angel One Live Status Badge -->
+      <div id="angel-status-badge" style="display: inline-flex; align-items: center; gap: 6px; background: #0D1527; border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace;">
+        <span id="angel-status-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #94A3B8;"></span>
+        <span id="angel-status-text" style="color: #94A3B8;">Angel One: Checking...</span>
+      </div>
+
+      <!-- Auto Refresh Controller -->
+      <div class="refresh-controller">
+        <span class="live-dot" id="pulse-indicator"></span>
+        <span>Refresh:</span>
+        <select id="refresh-rate-select" class="refresh-select" onchange="updateRefreshRate(this.value)">
+          <option value="3000" selected>3s ⚡ (Default Real-time)</option>
+          <option value="1000">1s 🚀</option>
+          <option value="5000">5s</option>
+          <option value="15000">15s</option>
+          <option value="0">Paused ⏸️</option>
+        </select>
+        <span id="tick-counter" style="font-size: 10px; color: var(--accent-green); font-family: 'JetBrains Mono';">3s</span>
+      </div>
+
+      <button class="btn" onclick="triggerManualRefresh()">🔄 Refresh Now</button>
+      <a href="/docs" target="_blank" class="btn btn-primary">📖 API Docs</a>
+    </div>
+  </header>
+
+  <!-- Live Breaking News Ticker -->
+  <div class="news-ticker-container">
+    <div class="ticker-tag">⚡ LIVE FEED</div>
+    <div class="ticker-content">
+      <div class="ticker-scroll" id="ticker-scroll-content">
+        <span class="ticker-item">Loading real-time Indian stock & commodity market feeds...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Volatility Cockpit: INDIA VIX & GIFT NIFTY -->
+  <div class="volatility-cockpit-grid">
+    <!-- India VIX Widget -->
+    <div class="vix-cockpit-card">
+      <div class="cockpit-title">
+        <span>⚡ INDIA VIX (Implied Volatility / Fear Gauge)</span>
+        <span class="cockpit-badge" id="vix-regime-badge" style="background: rgba(168, 85, 247, 0.2); color: #D8B4FE;">FETCHING...</span>
+      </div>
+      <div class="cockpit-val-row">
+        <span class="cockpit-big-val" id="vix-val">--</span>
+        <span id="vix-change" class="num-mono" style="font-size: 13px;">--</span>
+        <span style="font-size: 11px; color: var(--text-muted);" id="vix-range">Day: -- / --</span>
+      </div>
+      <div class="cockpit-desc">
+        <span style="color: var(--accent-gold); font-weight: 700;">💡 Options Strategy:</span>
+        <span id="vix-strategy-tip">Evaluating volatility regime...</span>
+      </div>
+    </div>
+
+    <!-- GIFT NIFTY & Global Cues Widget -->
+    <div class="gift-cockpit-card">
+      <div class="cockpit-title">
+        <span>🌏 GIFT NIFTY & REAL-TIME OPENING GAP PROJECTION</span>
+        <span class="cockpit-badge" id="gift-bias-badge" style="background: rgba(56, 189, 248, 0.2); color: #38BDF8;">CALCULATING...</span>
+      </div>
+      <div class="cockpit-val-row">
+        <span class="cockpit-big-val" id="gift-price">--</span>
+        <span id="gift-gap-text" class="num-mono" style="font-size: 13px; font-weight: 700;">--</span>
+        <span style="font-size: 11px; color: var(--text-muted);" id="gift-spot-ref">Spot: --</span>
+      </div>
+      <div class="cockpit-desc">
+        <span style="color: var(--accent-blue); font-weight: 700;">🎯 Opening Tip:</span>
+        <span id="gift-strategy-tip">Aggregating global market cues...</span>
+      </div>
+      <div class="global-cues-pills" id="global-cues-pills-box"></div>
+    </div>
+  </div>
+
+  <!-- AI News Sentiment & Strategy Suggestion Banner -->
+  <div class="news-intel-banner">
+    <div class="news-intel-left">
+      <div class="sentiment-meter-badge" id="macro-sentiment-badge" style="background: rgba(148, 163, 184, 0.2); color: #CBD5E1;">
+        <span>📡 SENTIMENT:</span> <b id="macro-sentiment-val">ANALYZING...</b>
+      </div>
+      <div class="news-suggestion-text" id="macro-suggestion-text">
+        Ingesting market catalysts and computing confluence sentiment outlook...
+      </div>
+    </div>
+    <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; display: flex; gap: 10px;">
+      <span style="color: var(--accent-green);">🟢 <span id="macro-bull-count">0</span> Bullish</span>
+      <span style="color: var(--accent-red);">🔴 <span id="macro-bear-count">0</span> Bearish</span>
+      <span style="color: var(--text-muted);">⚪ <span id="macro-neutral-count">0</span> Neutral</span>
+    </div>
+  </div>
+
+  <!-- Live CALL / PUT Cards: NIFTY 50, BANK NIFTY, BSE SENSEX -->
+  <div class="signal-header-grid">
+
+    <!-- NIFTY 50 CARD -->
+    <div class="signal-card" id="nifty-card">
+      <div class="sig-top">
+        <span class="sig-title">NIFTY 50 (NSE)</span>
+        <span class="rec-badge neutral" id="nifty-rec">CALCULATING...</span>
+      </div>
+      <div class="spot-price-row">
+        <span class="spot-price" id="nifty-price">--</span>
+        <span class="strike-tag" id="nifty-strike">STRIKE: --</span>
+      </div>
+
+      <!-- Feature Strip 1: PCR & Max Pain -->
+      <div class="feature-strip">
+        <div>
+          <span>📊 <b>PCR (OI):</b> </span>
+          <span class="feature-chip" id="nifty-pcr-badge">--</span>
+          <span style="color: var(--text-muted); margin-left: 4px;" id="nifty-pcr-text">--</span>
+        </div>
+        <div>
+          <span>🎯 Max Pain: <b id="nifty-max-pain" style="color: var(--accent-gold); font-family: 'JetBrains Mono';">--</b></span>
+        </div>
+      </div>
+
+      <!-- Feature Strip 2: Day Levels & CPR -->
+      <div class="feature-strip">
+        <div>
+          <span>📐 <b>Day Levels:</b> </span>
+          <span class="feature-chip" id="nifty-day-status">--</span>
+          <span style="color: var(--text-muted); margin-left: 4px;" id="nifty-pdh-pdl">PDH: -- | PDL: --</span>
+        </div>
+        <div>
+          <span>CPR: <b id="nifty-cpr-type" style="color: #38BDF8; font-family: 'JetBrains Mono';">--</b></span>
+        </div>
+      </div>
+
+      <!-- Feature Strip 3: Volume, VWAP & SMC -->
+      <div class="feature-strip">
+        <div>
+          <span>🔊 <b>Vol / VWAP:</b> </span>
+          <span class="feature-chip" id="nifty-vol-bias">--</span>
+          <span style="color: var(--text-muted); margin-left: 4px;" id="nifty-vwap-text">VWAP: --</span>
+        </div>
+        <div>
+          <span>🏛️ SMC: <b id="nifty-smc-bias" style="color: #D8B4FE; font-family: 'JetBrains Mono';">--</b></span>
+        </div>
+      </div>
+
+      <!-- 1. OPTION CONTRACT STRIKE PREMIUM PRICING (TRADE EXECUTION) -->
+      <div class="option-pricing-box">
+        <div class="option-pricing-title">
+          <span>💰 OPTION STRIKE EXECUTION (₹)</span>
+          <span id="nifty-opt-contract-tag" style="background: rgba(56, 189, 248, 0.2); color: #38BDF8; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-family: 'JetBrains Mono';">-- CE</span>
+        </div>
+        <div class="levels-grid-4" style="margin: 0 0 6px 0; background: transparent; padding: 0;">
+          <div class="level-box">
+            <div class="level-box-label">Option Buy (₹)</div>
+            <div class="level-box-val entry-val" id="nifty-entry">₹--</div>
+          </div>
+          <div class="level-box">
+            <div class="level-box-label">Target 1 (₹)</div>
+            <div class="level-box-val positive" id="nifty-t1">₹--</div>
+          </div>
+          <div class="level-box">
+            <div class="level-box-label">Target 2 (₹)</div>
+            <div class="level-box-val positive" id="nifty-t2">₹--</div>
+          </div>
+          <div class="level-box">
+            <div class="level-box-label">Stop Loss (₹)</div>
+            <div class="level-box-val negative" id="nifty-sl">₹--</div>
+          </div>
+        </div>
+        <div class="lot-details-bar" id="nifty-lot-details">
+          <span>Lot: <b id="nifty-lot-size">75 qty</b></span>
+          <span>Capital: <b id="nifty-capital" style="color: var(--accent-gold);">₹--</b></span>
+          <span>Gain (T1): <b id="nifty-lot-gain" style="color: var(--accent-green);">+₹--</b></span>
+          <span>Risk: <b id="nifty-lot-risk" style="color: var(--accent-red);">-₹--</b></span>
+        </div>
+      </div>
+
+      <!-- 2. UNDERLYING SPOT REFERENCE LEVELS -->
+      <div class="spot-levels-box">
+        <div class="spot-levels-title">📍 Underlying Spot Reference (Index Trigger Levels)</div>
+        <div class="spot-levels-grid">
+          <div><span style="color: var(--text-muted);">Spot:</span> <b id="nifty-spot-entry" style="color: #E2E8F0;">--</b></div>
+          <div><span style="color: var(--text-muted);">T1:</span> <b id="nifty-spot-t1" style="color: var(--accent-green);">--</b></div>
+          <div><span style="color: var(--text-muted);">T2:</span> <b id="nifty-spot-t2" style="color: var(--accent-green);">--</b></div>
+          <div><span style="color: var(--text-muted);">SL:</span> <b id="nifty-spot-sl" style="color: var(--accent-red);">--</b></div>
+        </div>
+      </div>
+
+      <!-- Active Pattern & Momentum Badges -->
+      <div class="pattern-badges-container" id="nifty-pattern-badges"></div>
+
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; margin-bottom: 4px;">
+        Confluence Score: <b style="color: white;" id="nifty-conf">--%</b> (R:R <span id="nifty-rr">--</span>)
+      </div>
+      <ul class="checklist" id="nifty-reasons">
+        <li>Scanning Candlesticks, SMC Order Blocks, Day Levels, CPR, Momentum & News...</li>
+      </ul>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;">
+        <button class="btn" style="font-size: 11px; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); color: #38BDF8; font-weight: 700; justify-content: center;" onclick="sendSignalToTelegram('^NSEI')">
+          📱 Telegram
+        </button>
+        <button class="btn" style="font-size: 11px; background: rgba(225, 48, 108, 0.15); border-color: rgba(225, 48, 108, 0.4); color: #FB7185; font-weight: 700; justify-content: center;" onclick="sendSignalToInstagram('^NSEI')">
+          📸 Instagram
+        </button>
+      </div>
+    </div>
+
+    <!-- BANK NIFTY CARD -->
+    <div class="signal-card" id="banknifty-card">
+      <div class="sig-top">
+        <span class="sig-title">BANK NIFTY (NSE)</span>
+        <span class="rec-badge neutral" id="banknifty-rec">CALCULATING...</span>
+      </div>
+      <div class="spot-price-row">
+        <span class="spot-price" id="banknifty-price">--</span>
+        <span class="strike-tag" id="banknifty-strike">STRIKE: --</span>
+      </div>
+
+      <!-- Feature Strip 1: PCR & Max Pain -->
+      <div class="feature-strip">
+        <div>
+          <span>📊 <b>PCR (OI):</b> </span>
+          <span class="feature-chip" id="banknifty-pcr-badge">--</span>
+          <span style="color: var(--text-muted); margin-left: 4px;" id="banknifty-pcr-text">--</span>
+        </div>
+        <div>
+          <span>🎯 Max Pain: <b id="banknifty-max-pain" style="color: var(--accent-gold); font-family: 'JetBrains Mono';">--</b></span>
+        </div>
+      </div>
+
+      <!-- Feature Strip 2: Day Levels & CPR -->
+      <div class="feature-strip">
+        <div>
+          <span>📐 <b>Day Levels:</b> </span>
+          <span class="feature-chip" id="banknifty-day-status">--</span>
+          <span style="color: var(--text-muted); margin-left: 4px;" id="banknifty-pdh-pdl">PDH: -- | PDL: --</span>
+        </div>
+        <div>
+          <span>CPR: <b id="banknifty-cpr-type" style="color: #38BDF8; font-family: 'JetBrains Mono';">--</b></span>
+        </div>
+      </div>
+
+      <!-- Feature Strip 3: Volume, VWAP & SMC -->
+      <div class="feature-strip">
+        <div>
+          <span>🔊 <b>Vol / VWAP:</b> </span>
+          <span class="feature-chip" id="banknifty-vol-bias">--</span>
+          <span style="color: var(--text-muted); margin-left: 4px;" id="banknifty-vwap-text">VWAP: --</span>
+        </div>
+        <div>
+          <span>🏛️ SMC: <b id="banknifty-smc-bias" style="color: #D8B4FE; font-family: 'JetBrains Mono';">--</b></span>
+        </div>
+      </div>
+
+      <!-- 1. OPTION CONTRACT STRIKE PREMIUM PRICING (TRADE EXECUTION) -->
+      <div class="option-pricing-box">
+        <div class="option-pricing-title">
+          <span>💰 OPTION STRIKE EXECUTION (₹)</span>
+          <span id="banknifty-opt-contract-tag" style="background: rgba(56, 189, 248, 0.2); color: #38BDF8; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-family: 'JetBrains Mono';">-- CE</span>
+        </div>
+        <div class="levels-grid-4" style="margin: 0 0 6px 0; background: transparent; padding: 0;">
+          <div class="level-box">
+            <div class="level-box-label">Option Buy (₹)</div>
+            <div class="level-box-val entry-val" id="banknifty-entry">₹--</div>
+          </div>
+          <div class="level-box">
+            <div class="level-box-label">Target 1 (₹)</div>
+            <div class="level-box-val positive" id="banknifty-t1">₹--</div>
+          </div>
+          <div class="level-box">
+            <div class="level-box-label">Target 2 (₹)</div>
+            <div class="level-box-val positive" id="banknifty-t2">₹--</div>
+          </div>
+          <div class="level-box">
+            <div class="level-box-label">Stop Loss (₹)</div>
+            <div class="level-box-val negative" id="banknifty-sl">₹--</div>
+          </div>
+        </div>
+        <div class="lot-details-bar" id="banknifty-lot-details">
+          <span>Lot: <b id="banknifty-lot-size">30 qty</b></span>
+          <span>Capital: <b id="banknifty-capital" style="color: var(--accent-gold);">₹--</b></span>
+          <span>Gain (T1): <b id="banknifty-lot-gain" style="color: var(--accent-green);">+₹--</b></span>
+          <span>Risk: <b id="banknifty-lot-risk" style="color: var(--accent-red);">-₹--</b></span>
+        </div>
+      </div>
+
+      <!-- 2. UNDERLYING SPOT REFERENCE LEVELS -->
+      <div class="spot-levels-box">
+        <div class="spot-levels-title">📍 Underlying Spot Reference (Index Trigger Levels)</div>
+        <div class="spot-levels-grid">
+          <div><span style="color: var(--text-muted);">Spot:</span> <b id="banknifty-spot-entry" style="color: #E2E8F0;">--</b></div>
+          <div><span style="color: var(--text-muted);">T1:</span> <b id="banknifty-spot-t1" style="color: var(--accent-green);">--</b></div>
+          <div><span style="color: var(--text-muted);">T2:</span> <b id="banknifty-spot-t2" style="color: var(--accent-green);">--</b></div>
+          <div><span style="color: var(--text-muted);">SL:</span> <b id="banknifty-spot-sl" style="color: var(--accent-red);">--</b></div>
+        </div>
+      </div>
+
+      <!-- Active Pattern & Momentum Badges -->
+      <div class="pattern-badges-container" id="banknifty-pattern-badges"></div>
+
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; margin-bottom: 4px;">
+        Confluence Score: <b style="color: white;" id="banknifty-conf">--%</b> (R:R <span id="banknifty-rr">--</span>)
+      </div>
+      <ul class="checklist" id="banknifty-reasons">
+        <li>Scanning Candlesticks, SMC Order Blocks, Day Levels, CPR, Momentum & News...</li>
+      </ul>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;">
+        <button class="btn" style="font-size: 11px; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); color: #38BDF8; font-weight: 700; justify-content: center;" onclick="sendSignalToTelegram('^NSEBANK')">
+          📱 Telegram
+        </button>
+        <button class="btn" style="font-size: 11px; background: rgba(225, 48, 108, 0.15); border-color: rgba(225, 48, 108, 0.4); color: #FB7185; font-weight: 700; justify-content: center;" onclick="sendSignalToInstagram('^NSEBANK')">
+          📸 Instagram
+        </button>
+      </div>
+    </div>
+
+    <!-- BSE SENSEX CARD -->
+    <div class="signal-card" id="sensex-card">
+      <div class="sig-top">
+        <span class="sig-title">BSE SENSEX</span>
+        <span class="rec-badge neutral" id="sensex-rec">CALCULATING...</span>
+      </div>
+      <div class="spot-price-row">
+        <span class="spot-price" id="sensex-price">--</span>
+        <span class="strike-tag" id="sensex-strike">STRIKE: --</span>
+      </div>
+
+      <!-- Feature Strip 1: PCR & Max Pain -->
+      <div class="feature-strip">
+        <div>
+          <span>📊 <b>PCR (OI):</b> </span>
+          <span class="feature-chip" id="sensex-pcr-badge">--</span>
+          <span style="color: var(--text-muted); margin-left: 4px;" id="sensex-pcr-text">--</span>
+        </div>
+        <div>
+          <span>🎯 Max Pain: <b id="sensex-max-pain" style="color: var(--accent-gold); font-family: 'JetBrains Mono';">--</b></span>
+        </div>
+      </div>
+
+      <!-- Feature Strip 2: Day Levels & CPR -->
+      <div class="feature-strip">
+        <div>
+          <span>📐 <b>Day Levels:</b> </span>
+          <span class="feature-chip" id="sensex-day-status">--</span>
+          <span style="color: var(--text-muted); margin-left: 4px;" id="sensex-pdh-pdl">PDH: -- | PDL: --</span>
+        </div>
+        <div>
+          <span>CPR: <b id="sensex-cpr-type" style="color: #38BDF8; font-family: 'JetBrains Mono';">--</b></span>
+        </div>
+      </div>
+
+      <!-- Feature Strip 3: Volume, VWAP & SMC -->
+      <div class="feature-strip">
+        <div>
+          <span>🔊 <b>Vol / VWAP:</b> </span>
+          <span class="feature-chip" id="sensex-vol-bias">--</span>
+          <span style="color: var(--text-muted); margin-left: 4px;" id="sensex-vwap-text">VWAP: --</span>
+        </div>
+        <div>
+          <span>🏛️ SMC: <b id="sensex-smc-bias" style="color: #D8B4FE; font-family: 'JetBrains Mono';">--</b></span>
+        </div>
+      </div>
+
+      <!-- 1. OPTION CONTRACT STRIKE PREMIUM PRICING (TRADE EXECUTION) -->
+      <div class="option-pricing-box">
+        <div class="option-pricing-title">
+          <span>💰 OPTION STRIKE EXECUTION (₹)</span>
+          <span id="sensex-opt-contract-tag" style="background: rgba(56, 189, 248, 0.2); color: #38BDF8; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-family: 'JetBrains Mono';">-- CE</span>
+        </div>
+        <div class="levels-grid-4" style="margin: 0 0 6px 0; background: transparent; padding: 0;">
+          <div class="level-box">
+            <div class="level-box-label">Option Buy (₹)</div>
+            <div class="level-box-val entry-val" id="sensex-entry">₹--</div>
+          </div>
+          <div class="level-box">
+            <div class="level-box-label">Target 1 (₹)</div>
+            <div class="level-box-val positive" id="sensex-t1">₹--</div>
+          </div>
+          <div class="level-box">
+            <div class="level-box-label">Target 2 (₹)</div>
+            <div class="level-box-val positive" id="sensex-t2">₹--</div>
+          </div>
+          <div class="level-box">
+            <div class="level-box-label">Stop Loss (₹)</div>
+            <div class="level-box-val negative" id="sensex-sl">₹--</div>
+          </div>
+        </div>
+        <div class="lot-details-bar" id="sensex-lot-details">
+          <span>Lot: <b id="sensex-lot-size">10 qty</b></span>
+          <span>Capital: <b id="sensex-capital" style="color: var(--accent-gold);">₹--</b></span>
+          <span>Gain (T1): <b id="sensex-lot-gain" style="color: var(--accent-green);">+₹--</b></span>
+          <span>Risk: <b id="sensex-lot-risk" style="color: var(--accent-red);">-₹--</b></span>
+        </div>
+      </div>
+
+      <!-- 2. UNDERLYING SPOT REFERENCE LEVELS -->
+      <div class="spot-levels-box">
+        <div class="spot-levels-title">📍 Underlying Spot Reference (Index Trigger Levels)</div>
+        <div class="spot-levels-grid">
+          <div><span style="color: var(--text-muted);">Spot:</span> <b id="sensex-spot-entry" style="color: #E2E8F0;">--</b></div>
+          <div><span style="color: var(--text-muted);">T1:</span> <b id="sensex-spot-t1" style="color: var(--accent-green);">--</b></div>
+          <div><span style="color: var(--text-muted);">T2:</span> <b id="sensex-spot-t2" style="color: var(--accent-green);">--</b></div>
+          <div><span style="color: var(--text-muted);">SL:</span> <b id="sensex-spot-sl" style="color: var(--accent-red);">--</b></div>
+        </div>
+      </div>
+
+      <!-- Active Pattern & Momentum Badges -->
+      <div class="pattern-badges-container" id="sensex-pattern-badges"></div>
+
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; margin-bottom: 4px;">
+        Confluence Score: <b style="color: white;" id="sensex-conf">--%</b> (R:R <span id="sensex-rr">--</span>)
+      </div>
+      <ul class="checklist" id="sensex-reasons">
+        <li>Scanning Candlesticks, SMC Order Blocks, Day Levels, CPR, Momentum & News...</li>
+      </ul>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;">
+        <button class="btn" style="font-size: 11px; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); color: #38BDF8; font-weight: 700; justify-content: center;" onclick="sendSignalToTelegram('^BSESN')">
+          📱 Telegram
+        </button>
+        <button class="btn" style="font-size: 11px; background: rgba(225, 48, 108, 0.15); border-color: rgba(225, 48, 108, 0.4); color: #FB7185; font-weight: 700; justify-content: center;" onclick="sendSignalToInstagram('^BSESN')">
+          📸 Instagram
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- COMMODITIES LIVE RADAR & SIGNALS (MCX / Global) -->
+  <div class="commodities-section">
+    <div class="commodities-header">
+      <div class="commodities-title">
+        <span>🥇 MCX COMMODITIES RADAR & STRIKE SIGNALS</span>
+        <span style="font-size: 11px; background: rgba(245, 158, 11, 0.2); color: #FBBF24; padding: 2px 8px; border-radius: 4px; font-weight: 700;">MCX LIVE CONFLUENCE</span>
+      </div>
+      <span style="font-size: 12px; color: var(--text-muted);">Gold 999 • Silver • Crude Oil • Natural Gas • Copper</span>
+    </div>
+
+    <div class="commodities-grid" id="commodities-cards-container">
+      <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 16px;">
+        Loading live MCX commodity prices and multi-strategy options/futures signals...
+      </div>
+    </div>
+  </div>
+
+  <!-- 21-FACTOR INSTITUTIONAL TRADING CONFLUENCE RADAR -->
+  <div class="institutional-section">
+    <div class="inst-header-row">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">🏛️</span>
+          <span style="font-size: 15px; font-weight: 800; color: #F8FAFC; letter-spacing: -0.2px;">
+            21-Factor Institutional Strategy & Filter Suite
+          </span>
+          <span style="font-size: 10px; background: rgba(168, 85, 247, 0.25); color: #D8B4FE; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-family: 'JetBrains Mono';">
+            PRO MATRIX
+          </span>
+        </div>
+        <div style="font-size: 11px; color: #94A3B8; margin-top: 3px;">
+          Vectorized quantitative checklist evaluating Volume Tiers, Multi-EMA Angle, Structure BOS/CHoCH, CVD Flow, Choppiness Gate & IST Killzones.
+        </div>
+      </div>
+
+      <!-- Instrument Selector Tabs -->
+      <div class="inst-symbol-pills">
+        <button class="inst-sym-btn active" id="inst-tab-NSEI" onclick="selectInstSymbol('^NSEI')">NIFTY 50</button>
+        <button class="inst-sym-btn" id="inst-tab-NSEBANK" onclick="selectInstSymbol('^NSEBANK')">BANK NIFTY</button>
+        <button class="inst-sym-btn" id="inst-tab-BSESN" onclick="selectInstSymbol('^BSESN')">SENSEX</button>
+        <button class="inst-sym-btn" id="inst-tab-CRUDEOIL" onclick="selectInstSymbol('CRUDEOIL')">CRUDE OIL (MCX)</button>
+        <button class="inst-sym-btn" id="inst-tab-NATURALGAS" onclick="selectInstSymbol('NATURALGAS')">NATURAL GAS (MCX)</button>
+        <button class="inst-sym-btn" id="inst-tab-GOLD" onclick="selectInstSymbol('GOLD')">GOLD 999 (MCX)</button>
+      </div>
+    </div>
+
+    <!-- KPI Summary Grid -->
+    <div class="inst-kpi-grid">
+      <div class="inst-kpi-card">
+        <div class="inst-kpi-title">🏆 Confluence Score</div>
+        <div class="inst-kpi-val" style="color: #34D399;" id="inst-kpi-score">-- / 21 PASS (0%)</div>
+        <div style="font-size: 10px; color: var(--text-muted);" id="inst-kpi-status">Evaluating Filters...</div>
+      </div>
+      <div class="inst-kpi-card">
+        <div class="inst-kpi-title">🌐 Market Regime</div>
+        <div class="inst-kpi-val" style="color: #38BDF8;" id="inst-kpi-regime">--</div>
+        <div style="font-size: 10px; color: var(--text-muted);" id="inst-kpi-regime-desc">Regime Classifier</div>
+      </div>
+      <div class="inst-kpi-card">
+        <div class="inst-kpi-title">🌊 Choppiness Gate</div>
+        <div class="inst-kpi-val" style="color: #FBBF24;" id="inst-kpi-chop">CHOP --</div>
+        <div style="font-size: 10px; color: var(--text-muted);">Threshold: &lt; 61.8 Gate</div>
+      </div>
+      <div class="inst-kpi-card">
+        <div class="inst-kpi-title">📊 Institutional Flow (CVD)</div>
+        <div class="inst-kpi-val" style="color: #D8B4FE;" id="inst-kpi-flow">--</div>
+        <div style="font-size: 10px; color: var(--text-muted);">Cumulative Delta + OI</div>
+      </div>
+      <div class="inst-kpi-card">
+        <div class="inst-kpi-title">⚖️ Risk-to-Reward</div>
+        <div class="inst-kpi-val" style="color: #38BDF8;" id="inst-kpi-rr">--</div>
+        <div style="font-size: 10px; color: var(--text-muted);">Mandatory &gt;= 1:1.5</div>
+      </div>
+      <div class="inst-kpi-card">
+        <div class="inst-kpi-title">⏰ Killzone Session</div>
+        <div class="inst-kpi-val" style="color: #F8FAFC;" id="inst-kpi-kz">--</div>
+        <div style="font-size: 10px; color: var(--text-muted);">IST Timed Session</div>
+      </div>
+    </div>
+
+    <!-- 21 Factor Live Cards Grid -->
+    <div class="inst-matrix-grid" id="inst-factors-container">
+      <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 20px;">
+        Evaluating 21 institutional filters...
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid: Technical Watchlist, Scanner & Paper Trading -->
+  <div class="main-grid">
+    <!-- Left Column: Search & Watchlist -->
+    <div>
+      <!-- Custom Deep Stock & Pattern Scanner -->
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="section-title">
+          <span>🔍 Deep Stock, Pattern & SMC Scanner</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Candles • SMC Order Blocks • W/M • CPR • Momentum • News</span>
+        </div>
+        <div class="search-box">
+          <input type="text" id="custom-symbol" class="input-text" placeholder="Enter symbol e.g. SBIN, RELIANCE, CRUDEOIL, GOLD, SILVER, TCS, INFY">
+          <button class="btn btn-primary" onclick="searchStock()">Scan Full Confluence</button>
+        </div>
+        <div id="search-result-box" style="display: none; padding: 14px; background: var(--bg-input); border-radius: 8px; border: 1px solid var(--border-subtle);"></div>
+      </div>
+
+      <!-- Top Stocks Watchlist -->
+      <div class="card">
+        <div class="section-title">
+          <span>📊 Top Indian Equities Live Watchlist</span>
+          <span style="font-size: 11px; color: var(--accent-blue);">● Real-Time Feed</span>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Stock</th>
+                <th>LTP (₹)</th>
+                <th>Day Change</th>
+                <th>PCR (OI)</th>
+                <th>Option Signal</th>
+                <th>Price Action / SMC</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="watchlist-tbody">
+              <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Loading real-time market data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Paper Trader Simulator & Matrix -->
+    <div>
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="section-title">
+          <span>💼 100% Free Paper Trading Simulator</span>
+          <span class="signal-tag signal-buy">Live Portfolio</span>
+        </div>
+
+        <div style="background: var(--bg-input); border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+          <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Available Virtual Cash</div>
+          <div style="font-size: 17px; font-weight: 800; font-family: 'JetBrains Mono';" id="port-cash">₹100,000.00</div>
+        </div>
+
+        <div style="background: var(--bg-input); border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+          <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Total Portfolio Value</div>
+          <div style="font-size: 17px; font-weight: 800; font-family: 'JetBrains Mono';" id="port-value">₹100,000.00</div>
+        </div>
+
+        <!-- Quick Paper Order Box -->
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Execute Simulated Order</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+          <input type="text" id="trade-symbol" class="input-text" placeholder="Symbol (e.g. SBIN)" style="padding: 6px 8px; font-size: 12px;">
+          <input type="number" id="trade-qty" class="input-text" placeholder="Qty" value="1" min="1" style="padding: 6px 8px; font-size: 12px;">
+        </div>
+        <div style="display: flex; gap: 6px; margin-bottom: 14px;">
+          <button class="btn btn-green" style="flex: 1; justify-content: center;" onclick="executeTrade('BUY')">BUY Option/Stock</button>
+          <button class="btn btn-red" style="flex: 1; justify-content: center;" onclick="executeTrade('SELL')">SELL Position</button>
+        </div>
+
+        <!-- Active Positions Table -->
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Open Holdings</div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th>Qty</th>
+                <th>Avg Buy</th>
+                <th>LTP</th>
+                <th>P&L</th>
+              </tr>
+            </thead>
+            <tbody id="positions-tbody">
+              <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 12px;">No active paper positions</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real-Time News Intel Grid -->
+  <div class="card" style="margin-bottom: 24px;">
+    <div class="section-title">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>📰 Real-Time Indian Market News & Sentiment Analysis</span>
+        <span class="live-dot"></span>
+      </div>
+      <button class="btn" style="padding: 3px 8px; font-size: 11px;" onclick="loadNews(true)">Fetch Fresh Headlines</button>
+    </div>
+
+    <div class="news-tabs">
+      <button class="news-tab active" onclick="filterNews('ALL', this)">All Market News</button>
+      <button class="news-tab" onclick="filterNews('BULLISH', this)">🟢 Bullish Catalysts</button>
+      <button class="news-tab" onclick="filterNews('BEARISH', this)">🔴 Bearish Headwinds</button>
+      <button class="news-tab" onclick="filterNews('NEUTRAL', this)">⚪ Neutral / Macro</button>
+    </div>
+
+    <div class="news-grid" id="news-grid-container">
+      <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 18px;">
+        Fetching real-time news headlines...
+      </div>
+    </div>
+  </div>
+
+  <!-- TRADE AUDIT & AUTONOMOUS MISTAKE SELF-CORRECTION MODULE -->
+  <div class="audit-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+      <div>
+        <div style="font-size: 15px; font-weight: 800; color: white; display: flex; align-items: center; gap: 8px;">
+          <span>🛡️ Local Persistent Trade Audit & Autonomous Mistake Self-Correction Engine</span>
+          <span style="font-size: 11px; background: rgba(56, 189, 248, 0.2); color: #38BDF8; padding: 2px 7px; border-radius: 4px; font-weight: 700;">LOCAL JSONL LOGS</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">
+          Live Price Action Auditing • Auto SL & Breakout Invalidation Exits • Trailing SL on +5 Pts • Telegram & Instagram Recipient: <b>9100040008</b>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-primary" style="font-size: 11px; padding: 5px 12px;" onclick="triggerAuditScan()">⚡ Audit & Self-Correct Now</button>
+        <button class="btn" style="font-size: 11px; padding: 5px 10px;" onclick="loadAuditData()">🔄 Refresh Logs</button>
+      </div>
+    </div>
+
+    <!-- Stat Counter Cards -->
+    <div class="audit-stat-grid">
+      <div class="audit-stat-card">
+        <div class="audit-stat-title">📁 Total Alerts Logged</div>
+        <div class="audit-stat-val" style="color: #38BDF8;" id="audit-total-alerts">--</div>
+        <div style="font-size: 10px; color: var(--text-muted);">logs/trade_alerts.jsonl</div>
+      </div>
+      <div class="audit-stat-card">
+        <div class="audit-stat-title">⏳ Active Tracked Alerts</div>
+        <div class="audit-stat-val" style="color: #FBBF24;" id="audit-active-alerts">--</div>
+        <div style="font-size: 10px; color: var(--text-muted);">Under Live Surveillance</div>
+      </div>
+      <div class="audit-stat-card">
+        <div class="audit-stat-title">🎯 Target 1 & 2 Hits (+5 Pts)</div>
+        <div class="audit-stat-val" style="color: #34D399;" id="audit-target-hits">--</div>
+        <div style="font-size: 10px; color: var(--text-muted);">Profit Trailed / Locked</div>
+      </div>
+      <div class="audit-stat-card">
+        <div class="audit-stat-title">🛑 Auto SL / Breakout Exits</div>
+        <div class="audit-stat-val" style="color: #F87171;" id="audit-sl-exits">--</div>
+        <div style="font-size: 10px; color: var(--text-muted);">Capital Protected</div>
+      </div>
+      <div class="audit-stat-card">
+        <div class="audit-stat-title">⚡ Self-Corrections Sent</div>
+        <div class="audit-stat-val" style="color: #D8B4FE;" id="audit-corrections-count">--</div>
+        <div style="font-size: 10px; color: var(--text-muted);">Telegram & Instagram</div>
+      </div>
+      <div class="audit-stat-card">
+        <div class="audit-stat-title">🏆 Verified Accuracy</div>
+        <div class="audit-stat-val" style="color: #34D399;" id="audit-win-rate">--%</div>
+        <div style="font-size: 10px; color: var(--text-muted);">Adaptive Recalibration</div>
+      </div>
+    </div>
+
+    <!-- Active Trades Table & Chronological Self-Correction Feed -->
+    <div class="audit-split-grid">
+      <!-- Left: Active Tracked Alerts -->
+      <div>
+        <div style="font-size: 12px; font-weight: 700; color: white; margin-bottom: 8px; display: flex; justify-content: space-between;">
+          <span>🎯 Active Alerts Under Live Audit Surveillance</span>
+          <span style="color: var(--text-muted); font-size: 11px;">Tick Evaluated</span>
+        </div>
+        <div class="table-container" style="max-height: 240px; overflow-y: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Alert ID / Symbol</th>
+                <th>Signal / Strike</th>
+                <th>Option Entry</th>
+                <th>Est. Current</th>
+                <th>T1 (+5 Pts)</th>
+                <th>Stop Loss</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="audit-active-tbody">
+              <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 14px;">No active alerts under surveillance. Alerts will appear here when generated or dispatched.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right: Autonomous Mistake Self-Corrections Dispatched -->
+      <div>
+        <div style="font-size: 12px; font-weight: 700; color: white; margin-bottom: 8px; display: flex; justify-content: space-between;">
+          <span>🚨 Autonomous Self-Correction & Exit Notices</span>
+          <span style="color: var(--text-muted); font-size: 11px;">Target: 9100040008</span>
+        </div>
+        <div id="audit-corrections-feed" style="max-height: 240px; overflow-y: auto;">
+          <div style="text-align: center; color: var(--text-muted); padding: 14px; font-size: 12px;">
+            No mistake invalidations detected yet. When an adverse move or SL breach occurs, instant correction notices are logged and dispatched here.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom: Live Human-Readable Local Text Log Terminal -->
+    <div style="margin-top: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+          🖥️ Local Persistent Audit Terminal Log (<code>logs/trade_audit.log</code>)
+        </span>
+        <span style="font-size: 10px; color: #38BDF8;">Auto-syncs on every tick</span>
+      </div>
+      <div class="audit-terminal" id="audit-log-terminal">
+        [INITIALIZING] Local trade audit logger active. Ready to track trades and mistakes...
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast-msg"></div>
+
+<script>
+  let allNewsArticles = [];
+  let refreshIntervalMs = 3000; // 3-second continuous real-time default
+  let refreshTimer = null;
+  let isFetching = false;
+  let lastNewsFetchTime = 0;
+  let lastCommoditiesFetchTime = 0;
+
+  function showToast(msg) {
+    const t = document.getElementById('toast-msg');
+    t.innerText = msg;
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 4000);
+  }
+
+  function formatCurrency(val) {
+    if (val === null || val === undefined || isNaN(val)) return '--';
+    return '₹' + Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function updateRefreshRate(newRate) {
+    refreshIntervalMs = parseInt(newRate, 10);
+    clearInterval(refreshTimer);
+    const tick = document.getElementById('tick-counter');
+    const dot = document.getElementById('pulse-indicator');
+
+    if (refreshIntervalMs > 0) {
+      tick.innerText = (refreshIntervalMs / 1000) + 's';
+      dot.style.display = 'inline-block';
+      startAutoRefresh();
+      showToast(`⚡ Real-time refresh set to ${refreshIntervalMs / 1000} second(s)`);
+    } else {
+      tick.innerText = 'PAUSED';
+      dot.style.display = 'none';
+      showToast('⏸️ Auto-refresh paused');
+    }
+  }
+
+  function startAutoRefresh() {
+    if (refreshIntervalMs <= 0) return;
+    refreshTimer = setInterval(() => {
+      runRealTimeTick();
+    }, refreshIntervalMs);
+  }
+
+  async function runRealTimeTick() {
+    if (isFetching) return;
+    isFetching = true;
+
+    try {
+      // 0. Consolidated ultra-fast 1-second snapshot (Sub-5ms response)
+      const res = await fetch('/api/v1/market/live-tick');
+      if (res.ok) {
+        const snap = await res.json();
+
+        // A. Market Hours & Filter Status
+        if (snap.market_session) {
+          renderMarketSession(snap);
+        }
+
+        // B. Broker / Feed Status
+        if (snap.angel_status) {
+          renderAngelStatus(snap.angel_status);
+        }
+
+        // B. Options Signals (NIFTY 50, BANK NIFTY, SENSEX)
+        if (snap.options_signals && snap.options_signals.length > 0) {
+          snap.options_signals.forEach(sig => {
+            if (sig.institutional_matrix) {
+              cachedSignalMatrices[sig.symbol] = sig.institutional_matrix;
+            }
+            if (sig.symbol === '^NSEI') renderSignalCard('nifty', sig);
+            else if (sig.symbol === '^NSEBANK') renderSignalCard('banknifty', sig);
+            else if (sig.symbol === '^BSESN') renderSignalCard('sensex', sig);
+          });
+        }
+
+        // C. India VIX & GIFT NIFTY
+        if (snap.vix && snap.gift_nifty) {
+          renderVixAndGiftNifty(snap.vix, snap.gift_nifty);
+        }
+
+        // D. MCX Commodities
+        if (snap.commodities) {
+          snap.commodities.forEach(sig => {
+            if (sig.institutional_matrix) {
+              cachedSignalMatrices[sig.symbol] = sig.institutional_matrix;
+            }
+          });
+          renderCommodities(snap.commodities);
+        }
+
+        // E. 21-Factor Institutional Confluence Matrix
+        renderInstitutionalMatrix(selectedInstSymbol);
+
+        // F. Watchlist Real-Time Quotes
+        if (snap.watchlist) {
+          renderWatchlist(snap.watchlist);
+        }
+      }
+
+      // Portfolio position status
+      await loadPortfolio();
+
+      // Audit data refresh every 3s
+      const now = Date.now();
+      if (now - lastAuditFetchTime > 3000) {
+        lastAuditFetchTime = now;
+        loadAuditData();
+      }
+
+      // News refresh every 30s to respect free RSS limits
+      if (now - lastNewsFetchTime > 30000) {
+        lastNewsFetchTime = now;
+        loadNews(false);
+      }
+    } catch (err) {
+      console.error("Tick error:", err);
+    } finally {
+      isFetching = false;
+    }
+  }
+
+  function renderMarketSession(snap) {
+    const dot = document.getElementById('market-session-dot');
+    const text = document.getElementById('market-session-text');
+    const badge = document.getElementById('market-hours-badge');
+    if (!dot || !text || !badge || !snap || !snap.market_session) return;
+
+    const nse = snap.market_session.nse_bse || {};
+    const mcx = snap.market_session.mcx || {};
+    const istTime = snap.ist_datetime ? snap.ist_datetime.split(',')[1] || '' : '';
+
+    if (nse.is_open) {
+      dot.style.background = '#34D399';
+      dot.style.boxShadow = '0 0 8px #34D399';
+      text.innerText = `NSE: Live Open • Min 5 Pts`;
+      text.style.color = '#34D399';
+      badge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+    } else if (mcx.is_open) {
+      dot.style.background = '#FBBF24';
+      dot.style.boxShadow = '0 0 8px #FBBF24';
+      text.innerText = `MCX: Live Open • Min 5 Pts`;
+      text.style.color = '#FBBF24';
+      badge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+    } else {
+      dot.style.background = '#94A3B8';
+      dot.style.boxShadow = 'none';
+      text.innerText = `Market Closed (${istTime.trim().slice(0, 11) || 'Off-Hours'})`;
+      text.style.color = '#94A3B8';
+      badge.style.borderColor = 'rgba(148, 163, 184, 0.3)';
+    }
+  }
+
+  function renderAngelStatus(data) {
+    const dot = document.getElementById('angel-status-dot');
+    const text = document.getElementById('angel-status-text');
+    const badge = document.getElementById('angel-status-badge');
+
+    if (!dot || !text || !badge || !data) return;
+
+    if (data.is_connected) {
+      dot.style.background = '#34D399';
+      dot.style.boxShadow = '0 0 8px #34D399';
+      text.innerText = `Angel One: Live (${data.client_code || 'Connected'})`;
+      text.style.color = '#34D399';
+      badge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+    } else if (data.is_configured) {
+      dot.style.background = '#FBBF24';
+      dot.style.boxShadow = 'none';
+      text.innerText = 'Angel One: Connecting...';
+      text.style.color = '#FBBF24';
+      badge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+    } else {
+      dot.style.background = '#38BDF8';
+      dot.style.boxShadow = 'none';
+      text.innerText = 'Feed: Public Live Stream';
+      text.style.color = '#38BDF8';
+      badge.style.borderColor = 'rgba(56, 189, 248, 0.3)';
+    }
+  }
+
+  async function loadAngelStatus() {
+    try {
+      const res = await fetch('/api/v1/market/angel/status');
+      const data = await res.json();
+      renderAngelStatus(data);
+    } catch (e) {
+      console.debug('Angel status check skipped:', e);
+    }
+  }
+
+  function renderVixAndGiftNifty(vixData, giftData) {
+    if (vixData) {
+      const vixVal = document.getElementById('vix-val');
+      const vixChange = document.getElementById('vix-change');
+      const vixRegime = document.getElementById('vix-regime-badge');
+      const vixRange = document.getElementById('vix-range');
+      const vixTip = document.getElementById('vix-strategy-tip');
+
+      if (vixVal) vixVal.innerText = vixData.current_vix ? Number(vixData.current_vix).toFixed(2) : '--';
+      const isVixUp = (vixData.change || 0) >= 0;
+      if (vixChange) {
+        vixChange.innerText = `${isVixUp ? '+' : ''}${(vixData.change || 0).toFixed(2)} (${isVixUp ? '+' : ''}${(vixData.change_percent || 0).toFixed(2)}%)`;
+        vixChange.className = isVixUp ? 'num-mono negative' : 'num-mono positive';
+      }
+
+      if (vixRegime) {
+        vixRegime.innerText = vixData.regime || 'NORMAL';
+        if (vixData.regime === 'IDEAL_VOLATILITY') {
+          vixRegime.style.background = 'rgba(16, 185, 129, 0.2)';
+          vixRegime.style.color = '#34D399';
+        } else if (vixData.regime === 'LOW_VOLATILITY') {
+          vixRegime.style.background = 'rgba(56, 189, 248, 0.2)';
+          vixRegime.style.color = '#38BDF8';
+        } else if (vixData.regime === 'ELEVATED_VOLATILITY') {
+          vixRegime.style.background = 'rgba(245, 158, 11, 0.2)';
+          vixRegime.style.color = '#FBBF24';
+        } else {
+          vixRegime.style.background = 'rgba(239, 68, 68, 0.2)';
+          vixRegime.style.color = '#F87171';
+        }
+      }
+
+      if (vixRange) vixRange.innerText = `H: ${vixData.day_high || '--'} / L: ${vixData.day_low || '--'}`;
+      if (vixTip) vixTip.innerText = vixData.options_strategy || vixData.description || '--';
+    }
+
+    if (giftData) {
+      const giftPrice = document.getElementById('gift-price');
+      const giftGap = document.getElementById('gift-gap-text');
+      const giftBias = document.getElementById('gift-bias-badge');
+      const giftSpot = document.getElementById('gift-spot-ref');
+      const giftTip = document.getElementById('gift-strategy-tip');
+      const globalPills = document.getElementById('global-cues-pills-box');
+
+      if (giftPrice) giftPrice.innerText = formatCurrency(giftData.gift_nifty_price);
+      const isGapPos = (giftData.projected_gap_pts || 0) >= 0;
+      if (giftGap) {
+        giftGap.innerText = `Gap: ${isGapPos ? '+' : ''}${(giftData.projected_gap_pts || 0).toFixed(1)} pts (${isGapPos ? '+' : ''}${(giftData.projected_gap_pct || 0).toFixed(2)}%)`;
+        giftGap.className = isGapPos ? 'num-mono positive' : 'num-mono negative';
+      }
+
+      if (giftBias) {
+        giftBias.innerText = giftData.bias_label || giftData.opening_bias;
+        if (giftData.opening_bias && giftData.opening_bias.includes('UP')) {
+          giftBias.style.background = 'rgba(16, 185, 129, 0.2)';
+          giftBias.style.color = '#34D399';
+        } else if (giftData.opening_bias && giftData.opening_bias.includes('DOWN')) {
+          giftBias.style.background = 'rgba(239, 68, 68, 0.2)';
+          giftBias.style.color = '#F87171';
+        } else {
+          giftBias.style.background = 'rgba(148, 163, 184, 0.2)';
+          giftBias.style.color = '#CBD5E1';
+        }
+      }
+
+      if (giftSpot) giftSpot.innerText = `Spot: ${formatCurrency(giftData.nifty_spot_price)}`;
+      if (giftTip) giftTip.innerText = giftData.strategy_tip || '--';
+
+      if (globalPills && giftData.global_markets && giftData.global_markets.length > 0) {
+        globalPills.innerHTML = giftData.global_markets.map(g => {
+          const isUp = (g.change_percent || 0) >= 0;
+          return `
+            <span class="global-pill">
+              <b>${g.name}:</b> <span style="color: ${isUp ? 'var(--accent-green)' : 'var(--accent-red)'}">${isUp ? '+' : ''}${(g.change_percent || 0).toFixed(2)}%</span>
+            </span>
+          `;
+        }).join('');
+      }
+    }
+  }
+
+  async function loadVixAndGiftNifty() {
+    try {
+      const vixRes = await fetch('/api/v1/market/vix');
+      const vixData = await vixRes.json();
+      const giftRes = await fetch('/api/v1/market/giftnifty');
+      const giftData = await giftRes.json();
+      renderVixAndGiftNifty(vixData, giftData);
+    } catch (e) {
+      console.error('Error fetching VIX/GIFT NIFTY:', e);
+    }
+  }
+
+  function renderCommodities(data) {
+    const container = document.getElementById('commodities-cards-container');
+    if (!container || !data || data.length === 0) return;
+
+    container.innerHTML = data.map(c => {
+      const isBull = c.signal_type === 'BULLISH';
+      const isBear = c.signal_type === 'BEARISH';
+      const recClass = isBull ? 'call' : (isBear ? 'put' : 'neutral');
+      const borderColor = isBull ? 'rgba(16, 185, 129, 0.5)' : (isBear ? 'rgba(239, 68, 68, 0.5)' : 'var(--border-subtle)');
+
+      let badges = '';
+      if (c.price_action_momentum) {
+        const pam = c.price_action_momentum;
+        if (pam.momentum_regime && pam.momentum_regime !== 'NEUTRAL_COMPRESSION') {
+          const isRegimeBull = pam.momentum_regime.includes('BULLISH');
+          badges += `<span class="pattern-badge ${isRegimeBull ? 'pattern-bullish' : 'pattern-bearish'}">⚡ ${pam.momentum_regime.replace(/_/g, ' ')}</span> `;
+        }
+        if (pam.bos_status && pam.bos_status.includes('BOS')) {
+          badges += `<span class="pattern-badge pattern-smc">💥 ${pam.bos_status.replace(/_/g, ' ')}</span> `;
+        }
+      }
+
+      return `
+        <div class="commodity-card" style="border-color: ${borderColor};">
+          <div class="commodity-top">
+            <span class="commodity-name">${c.instrument}</span>
+            <span class="rec-badge ${recClass}" style="font-size: 11px; padding: 2px 8px;">${c.recommendation}</span>
+          </div>
+          <div class="commodity-price-row">
+            <span class="commodity-price">${formatCurrency(c.spot_price)} <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">${c.unit || ''}</span></span>
+            <span class="strike-tag" style="font-size: 11px; padding: 2px 6px;">${c.suggested_strike}</span>
+          </div>
+
+          <!-- Execution Box -->
+          <div style="background: #060A14; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px; margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--accent-gold); font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">
+              <span>STRIKE PREMIUM</span>
+              <span>LOT: ${c.lot_size} | CAP: ${formatCurrency(c.capital_required_per_lot)}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; font-size: 11px; font-family: 'JetBrains Mono', monospace; text-align: center;">
+              <div style="background: rgba(30, 41, 59, 0.3); padding: 4px; border-radius: 4px;">
+                <div style="font-size: 9px; color: var(--text-muted);">BUY</div>
+                <div style="color: var(--accent-blue); font-weight: 800;">${formatCurrency(c.option_entry_price)}</div>
+              </div>
+              <div style="background: rgba(30, 41, 59, 0.3); padding: 4px; border-radius: 4px;">
+                <div style="font-size: 9px; color: var(--text-muted);">T1</div>
+                <div style="color: var(--accent-green); font-weight: 800;">${formatCurrency(c.option_target_1)}</div>
+              </div>
+              <div style="background: rgba(30, 41, 59, 0.3); padding: 4px; border-radius: 4px;">
+                <div style="font-size: 9px; color: var(--text-muted);">T2</div>
+                <div style="color: var(--accent-green); font-weight: 800;">${formatCurrency(c.option_target_2)}</div>
+              </div>
+              <div style="background: rgba(30, 41, 59, 0.3); padding: 4px; border-radius: 4px;">
+                <div style="font-size: 9px; color: var(--text-muted);">SL</div>
+                <div style="color: var(--accent-red); font-weight: 800;">${formatCurrency(c.option_stop_loss)}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Momentum & SMC Badges -->
+          <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px;">
+            ${badges || '<span class="pattern-badge pattern-neutral">⚖️ Consolidated Range</span>'}
+          </div>
+
+          <div style="display: flex; gap: 4px;">
+            <button class="btn btn-green" style="flex: 1; justify-content: center; padding: 4px 6px; font-size: 11px;" onclick="prefillTrade('${c.symbol}', ${c.lot_size})">Buy</button>
+            <button class="btn" style="padding: 4px 6px; font-size: 11px;" onclick="inspectStock('${c.symbol}')">Inspect</button>
+            <button class="btn" style="padding: 4px 6px; font-size: 11px; background: rgba(56, 189, 248, 0.15); color: #38BDF8; border-color: rgba(56, 189, 248, 0.4);" title="Send alert to Telegram (9100040008)" onclick="sendSignalToTelegram('${c.symbol}')">📱 TG</button>
+            <button class="btn" style="padding: 4px 6px; font-size: 11px; background: rgba(225, 48, 108, 0.15); color: #FB7185; border-color: rgba(225, 48, 108, 0.4);" title="Send alert to Instagram (9100040008)" onclick="sendSignalToInstagram('${c.symbol}')">📸 IG</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function loadCommodities() {
+    try {
+      const res = await fetch('/api/v1/market/commodities');
+      const data = await res.json();
+      renderCommodities(data);
+    } catch (e) {
+      console.error('Error fetching commodities:', e);
+    }
+  }
+
+  async function loadNews(forceRefresh = false) {
+    try {
+      const url = `/api/v1/market/news?limit=20${forceRefresh ? '&refresh=true' : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      allNewsArticles = data.articles || [];
+
+      // Update Macro Sentiment Banner
+      const sentBadge = document.getElementById('macro-sentiment-badge');
+      const sentVal = document.getElementById('macro-sentiment-val');
+      const suggText = document.getElementById('macro-suggestion-text');
+      const bullCount = document.getElementById('macro-bull-count');
+      const bearCount = document.getElementById('macro-bear-count');
+      const neutCount = document.getElementById('macro-neutral-count');
+
+      sentVal.innerText = data.overall_sentiment;
+      suggText.innerText = data.suggestion;
+      bullCount.innerText = data.bullish_articles_count || 0;
+      bearCount.innerText = data.bearish_articles_count || 0;
+      neutCount.innerText = data.neutral_articles_count || 0;
+
+      if (data.overall_sentiment === 'BULLISH') {
+        sentBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+        sentBadge.style.color = '#34D399';
+      } else if (data.overall_sentiment === 'BEARISH') {
+        sentBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+        sentBadge.style.color = '#F87171';
+      } else {
+        sentBadge.style.background = 'rgba(148, 163, 184, 0.2)';
+        sentBadge.style.color = '#CBD5E1';
+      }
+
+      renderTicker(allNewsArticles);
+      renderNewsGrid(allNewsArticles);
+    } catch (e) {
+      console.error('Error fetching market news:', e);
+    }
+  }
+
+  function renderTicker(articles) {
+    const ticker = document.getElementById('ticker-scroll-content');
+    if (!articles || articles.length === 0) {
+      ticker.innerHTML = '<span class="ticker-item">No live headlines available.</span>';
+      return;
+    }
+    ticker.innerHTML = articles.map(a => `
+      <span class="ticker-item">
+        <b>[${a.source}]</b> ${a.title}
+        <span style="color: ${a.sentiment === 'BULLISH' ? 'var(--accent-green)' : (a.sentiment === 'BEARISH' ? 'var(--accent-red)' : 'var(--text-muted)')}; font-weight: 700; margin-left: 4px;">
+          (${a.sentiment})
+        </span>
+      </span>
+    `).join('');
+  }
+
+  function renderNewsGrid(articles) {
+    const container = document.getElementById('news-grid-container');
+    if (!articles || articles.length === 0) {
+      container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 18px;">No articles matching selected filter.</div>';
+      return;
+    }
+
+    container.innerHTML = articles.map(art => {
+      const isBull = art.sentiment === 'BULLISH';
+      const isBear = art.sentiment === 'BEARISH';
+      const sentColor = isBull ? 'var(--accent-green)' : (isBear ? 'var(--accent-red)' : 'var(--text-muted)');
+      const sentBg = isBull ? 'rgba(16, 185, 129, 0.15)' : (isBear ? 'rgba(239, 68, 68, 0.15)' : 'rgba(148, 163, 184, 0.15)');
+
+      let chipsHtml = '';
+      if (art.bullish_keywords && art.bullish_keywords.length > 0) {
+        chipsHtml += art.bullish_keywords.map(k => `<span style="background: rgba(16, 185, 129, 0.15); color: #34D399; font-size: 10px; padding: 2px 5px; border-radius: 3px; font-family: monospace;">▲ ${k}</span>`).join(' ');
+      }
+      if (art.bearish_keywords && art.bearish_keywords.length > 0) {
+        chipsHtml += art.bearish_keywords.map(k => `<span style="background: rgba(239, 68, 68, 0.15); color: #F87171; font-size: 10px; padding: 2px 5px; border-radius: 3px; font-family: monospace;">▼ ${k}</span>`).join(' ');
+      }
+
+      return `
+        <div class="news-item-card">
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted);">
+              <span style="color: var(--accent-blue); font-weight: 700;">${art.source}</span>
+              <span>${art.published_at ? art.published_at.slice(0, 16) : ''}</span>
+            </div>
+            <a href="${art.url}" target="_blank" class="news-title-link">${art.title}</a>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+              <span style="background: ${sentBg}; color: ${sentColor}; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; font-family: monospace;">
+                ● ${art.sentiment} (${art.sentiment_score > 0 ? '+' : ''}${art.sentiment_score.toFixed(2)})
+              </span>
+              <span style="font-size: 10px; color: var(--text-muted);">Conf: ${art.confidence}%</span>
+            </div>
+            ${chipsHtml ? `<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(30, 41, 59, 0.5);">${chipsHtml}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function filterNews(filterType, btnElem) {
+    document.querySelectorAll('.news-tab').forEach(b => b.classList.remove('active'));
+    if (btnElem) btnElem.classList.add('active');
+    if (filterType === 'ALL') renderNewsGrid(allNewsArticles);
+    else renderNewsGrid(allNewsArticles.filter(a => a.sentiment === filterType));
+  }
+
+  async function loadOptionsSignals() {
+    try {
+      const res = await fetch('/api/v1/market/signals/options');
+      const signals = await res.json();
+
+      signals.forEach(sig => {
+        if (sig.symbol === '^NSEI') {
+          renderSignalCard('nifty', sig);
+        } else if (sig.symbol === '^NSEBANK') {
+          renderSignalCard('banknifty', sig);
+        } else if (sig.symbol === '^BSESN') {
+          renderSignalCard('sensex', sig);
+        }
+      });
+    } catch (e) {
+      console.error('Error fetching options signals:', e);
+    }
+  }
+
+  function renderSignalCard(prefix, sig) {
+    const card = document.getElementById(`${prefix}-card`);
+    if (!card) return;
+
+    const recBadge = document.getElementById(`${prefix}-rec`);
+    const priceEl = document.getElementById(`${prefix}-price`);
+    const strikeEl = document.getElementById(`${prefix}-strike`);
+    const optContractTag = document.getElementById(`${prefix}-opt-contract-tag`);
+
+    // Option Execution Prices (Option Premium)
+    const entryEl = document.getElementById(`${prefix}-entry`);
+    const t1El = document.getElementById(`${prefix}-t1`);
+    const t2El = document.getElementById(`${prefix}-t2`);
+    const slEl = document.getElementById(`${prefix}-sl`);
+
+    // Lot details
+    const lotSizeEl = document.getElementById(`${prefix}-lot-size`);
+    const capitalEl = document.getElementById(`${prefix}-capital`);
+    const lotGainEl = document.getElementById(`${prefix}-lot-gain`);
+    const lotRiskEl = document.getElementById(`${prefix}-lot-risk`);
+
+    // Spot Levels
+    const spotEntryEl = document.getElementById(`${prefix}-spot-entry`);
+    const spotT1El = document.getElementById(`${prefix}-spot-t1`);
+    const spotT2El = document.getElementById(`${prefix}-spot-t2`);
+    const spotSlEl = document.getElementById(`${prefix}-spot-sl`);
+
+    const confEl = document.getElementById(`${prefix}-conf`);
+    const rrEl = document.getElementById(`${prefix}-rr`);
+    const reasonsEl = document.getElementById(`${prefix}-reasons`);
+
+    // PCR
+    const pcrBadge = document.getElementById(`${prefix}-pcr-badge`);
+    const pcrText = document.getElementById(`${prefix}-pcr-text`);
+    const maxPainEl = document.getElementById(`${prefix}-max-pain`);
+
+    // Day levels & CPR
+    const dayStatus = document.getElementById(`${prefix}-day-status`);
+    const pdhPdl = document.getElementById(`${prefix}-pdh-pdl`);
+    const cprType = document.getElementById(`${prefix}-cpr-type`);
+
+    // Volume & SMC
+    const volBias = document.getElementById(`${prefix}-vol-bias`);
+    const vwapText = document.getElementById(`${prefix}-vwap-text`);
+    const smcBias = document.getElementById(`${prefix}-smc-bias`);
+    const badgesContainer = document.getElementById(`${prefix}-pattern-badges`);
+
+    priceEl.innerText = formatCurrency(sig.spot_price);
+    strikeEl.innerText = 'STRIKE: ' + sig.suggested_strike;
+    if (optContractTag) optContractTag.innerText = sig.suggested_strike;
+
+    // Option Contract Execution Premium Prices
+    const optEntry = sig.option_entry_price || sig.entry_price || 0;
+    const optT1 = sig.option_target_1 || sig.target_1 || 0;
+    const optT2 = sig.option_target_2 || sig.target_2 || 0;
+    const optSL = sig.option_stop_loss || sig.stop_loss || 0;
+
+    if (entryEl) entryEl.innerText = formatCurrency(optEntry);
+    if (t1El) t1El.innerText = formatCurrency(optT1);
+    if (t2El) t2El.innerText = formatCurrency(optT2);
+    if (slEl) slEl.innerText = formatCurrency(optSL);
+
+    // Lot Size & Capital per Lot
+    if (lotSizeEl) lotSizeEl.innerText = `${sig.lot_size || 1} qty`;
+    if (capitalEl) capitalEl.innerText = formatCurrency(sig.capital_required_per_lot);
+    if (lotGainEl) lotGainEl.innerText = `+${formatCurrency(sig.est_profit_per_lot_t1)}`;
+    if (lotRiskEl) lotRiskEl.innerText = `-${formatCurrency(sig.est_risk_per_lot)}`;
+
+    // Spot Levels
+    const spotLevels = sig.spot_levels || {};
+    if (spotEntryEl) spotEntryEl.innerText = formatCurrency(spotLevels.spot_entry || sig.spot_entry_price || sig.spot_price);
+    if (spotT1El) spotT1El.innerText = formatCurrency(spotLevels.spot_target_1 || sig.spot_target_1);
+    if (spotT2El) spotT2El.innerText = formatCurrency(spotLevels.spot_target_2 || sig.spot_target_2);
+    if (spotSlEl) spotSlEl.innerText = formatCurrency(spotLevels.spot_stop_loss || sig.spot_stop_loss);
+
+    confEl.innerText = sig.confidence_score + '%';
+    rrEl.innerText = sig.risk_reward_ratio;
+
+    if (sig.pcr) {
+      pcrBadge.innerText = sig.pcr.pcr_oi;
+      pcrText.innerText = sig.pcr.sentiment;
+      maxPainEl.innerText = formatCurrency(sig.pcr.max_pain_strike);
+      pcrBadge.style.background = sig.pcr.pcr_oi >= 1.05 ? 'rgba(16, 185, 129, 0.2)' : (sig.pcr.pcr_oi <= 0.85 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(148, 163, 184, 0.2)');
+      pcrBadge.style.color = sig.pcr.pcr_oi >= 1.05 ? '#34D399' : (sig.pcr.pcr_oi <= 0.85 ? '#F87171' : '#CBD5E1');
+    }
+
+    if (sig.day_levels) {
+      dayStatus.innerText = sig.day_levels.status || 'NORMAL';
+      dayStatus.style.background = sig.day_levels.status && sig.day_levels.status.includes('BREAKOUT') ? 'rgba(16, 185, 129, 0.2)' : (sig.day_levels.status && sig.day_levels.status.includes('BREAKDOWN') ? 'rgba(239, 68, 68, 0.2)' : 'rgba(56, 189, 248, 0.2)');
+      dayStatus.style.color = sig.day_levels.status && sig.day_levels.status.includes('BREAKOUT') ? '#34D399' : (sig.day_levels.status && sig.day_levels.status.includes('BREAKDOWN') ? '#F87171' : '#38BDF8');
+      pdhPdl.innerText = `PDH: ₹${sig.day_levels.pdh} | PDL: ₹${sig.day_levels.pdl}`;
+      if (sig.day_levels.cpr) {
+        cprType.innerText = sig.day_levels.cpr.cpr_type;
+      }
+    }
+
+    if (sig.volume_analysis) {
+      volBias.innerText = sig.volume_analysis.spike_status;
+      volBias.style.background = sig.volume_analysis.volume_ratio >= 1.5 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(148, 163, 184, 0.2)';
+      volBias.style.color = sig.volume_analysis.volume_ratio >= 1.5 ? '#FBBF24' : '#CBD5E1';
+      vwapText.innerText = `VWAP: ₹${sig.volume_analysis.vwap}`;
+    }
+
+    if (sig.order_blocks) {
+      smcBias.innerText = sig.order_blocks.smc_bias;
+    }
+
+    // Render Pattern & Price Action Momentum Badges
+    let badgesHtml = '';
+    if (sig.price_action_momentum) {
+      const pam = sig.price_action_momentum;
+      if (pam.momentum_regime && pam.momentum_regime !== 'NEUTRAL_COMPRESSION') {
+        const isBull = pam.momentum_regime.includes('BULLISH');
+        badgesHtml += `
+          <span class="pattern-badge ${isBull ? 'pattern-bullish' : 'pattern-bearish'}">
+            ⚡ ${pam.momentum_regime.replace(/_/g, ' ')} (${pam.momentum_score > 0 ? '+' : ''}${pam.momentum_score})
+          </span>
+        `;
+      }
+      if (pam.bos_status && pam.bos_status.includes('BOS')) {
+        const isBullBos = pam.bos_status.includes('BULLISH');
+        badgesHtml += `
+          <span class="pattern-badge ${isBullBos ? 'pattern-bullish' : 'pattern-bearish'}">
+            💥 ${pam.bos_status.replace(/_/g, ' ')}
+          </span>
+        `;
+      }
+      if (pam.wick_rejection && pam.wick_rejection !== 'NONE') {
+        const isBullWick = pam.wick_rejection.includes('BULLISH');
+        badgesHtml += `
+          <span class="pattern-badge ${isBullWick ? 'pattern-bullish' : 'pattern-bearish'}">
+            🎯 ${pam.wick_rejection.replace(/_/g, ' ')}
+          </span>
+        `;
+      }
+    }
+
+    if (sig.candle_patterns && sig.candle_patterns.length > 0) {
+      badgesHtml += sig.candle_patterns.map(c => `
+        <span class="pattern-badge ${c.type === 'BULLISH' ? 'pattern-bullish' : (c.type === 'BEARISH' ? 'pattern-bearish' : 'pattern-neutral')}">
+          🕯️ ${c.name}
+        </span>
+      `).join('');
+    }
+    if (sig.wm_patterns && sig.wm_patterns.pattern_type !== 'NEUTRAL') {
+      badgesHtml += `
+        <span class="pattern-badge ${sig.wm_patterns.pattern_type === 'BULLISH' ? 'pattern-bullish' : 'pattern-bearish'}">
+          📈 ${sig.wm_patterns.pattern} [${sig.wm_patterns.status}]
+        </span>
+      `;
+    }
+    if (sig.order_blocks && sig.order_blocks.smc_bias.includes('ORDER_BLOCK')) {
+      badgesHtml += `
+        <span class="pattern-badge pattern-smc">
+          🏛️ ${sig.order_blocks.smc_bias}
+        </span>
+      `;
+    }
+    badgesContainer.innerHTML = badgesHtml;
+
+    recBadge.innerText = sig.recommendation;
+    if (sig.recommendation.includes('CALL')) {
+      card.className = 'signal-card bullish';
+      recBadge.className = 'rec-badge call';
+    } else if (sig.recommendation.includes('PUT')) {
+      card.className = 'signal-card bearish';
+      recBadge.className = 'rec-badge put';
+    } else {
+      card.className = 'signal-card neutral';
+      recBadge.className = 'rec-badge neutral';
+    }
+
+    reasonsEl.innerHTML = (sig.confluence_reasons || []).map(r => `
+      <li>
+        <span style="color: ${r.toLowerCase().includes('bullish') || r.toLowerCase().includes('breakout') || r.toLowerCase().includes('expanding') ? 'var(--accent-green)' : 'var(--accent-red)'}">●</span>
+        <span>${r}</span>
+      </li>
+    `).join('');
+  }
+
+  // -------------------------------------------------------------
+  // 21-Factor Institutional Confluence Radar Controller
+  // -------------------------------------------------------------
+  let selectedInstSymbol = '^NSEI';
+  const cachedSignalMatrices = {};
+
+  function selectInstSymbol(sym) {
+    selectedInstSymbol = sym;
+    const tabMap = {
+      '^NSEI': 'inst-tab-NSEI',
+      '^NSEBANK': 'inst-tab-NSEBANK',
+      '^BSESN': 'inst-tab-BSESN',
+      'CRUDEOIL': 'inst-tab-CRUDEOIL',
+      'NATURALGAS': 'inst-tab-NATURALGAS',
+      'GOLD': 'inst-tab-GOLD',
+    };
+    Object.values(tabMap).forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.classList.remove('active');
+    });
+    const activeId = tabMap[sym];
+    if (activeId) {
+      const activeBtn = document.getElementById(activeId);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+
+    if (cachedSignalMatrices[sym]) {
+      renderInstitutionalMatrix(sym);
+    } else {
+      // Non-blocking fetch if not cached
+      fetch(`/api/v1/market/signals/options/${encodeURIComponent(sym)}`)
+        .then(r => r.json())
+        .then(sig => {
+          if (sig && sig.institutional_matrix) {
+            cachedSignalMatrices[sym] = sig.institutional_matrix;
+            renderInstitutionalMatrix(sym);
+          }
+        })
+        .catch(e => console.debug('Inst matrix fetch error:', e));
+    }
+  }
+
+  function renderInstitutionalMatrix(sym) {
+    const matrix = cachedSignalMatrices[sym];
+    const container = document.getElementById('inst-factors-container');
+    if (!container) return;
+
+    if (!matrix || !matrix.factors || matrix.factors.length === 0) {
+      container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 20px;">
+          Evaluating 21 institutional filters for ${sym}...
+        </div>
+      `;
+      return;
+    }
+
+    // 1. Confluence Score KPI
+    const scoreEl = document.getElementById('inst-kpi-score');
+    const statusEl = document.getElementById('inst-kpi-status');
+    if (scoreEl) {
+      scoreEl.innerText = `${matrix.passed_count || 0} / ${matrix.total_factors || 21} PASS (${matrix.confluence_percentage || 0}%)`;
+      scoreEl.style.color = matrix.passed_count >= 16 ? '#34D399' : (matrix.passed_count >= 11 ? '#FBBF24' : '#F87171');
+    }
+    if (statusEl) {
+      statusEl.innerText = matrix.passed_count >= 16 ? '🟢 HIGH INSTITUTIONAL CONFLUENCE' : (matrix.passed_count >= 11 ? '🟡 MODERATE CONFLUENCE' : '🔴 LOW CONFLUENCE / FILTER REJECTED');
+    }
+
+    // 2. Market Regime KPI
+    const regimeEl = document.getElementById('inst-kpi-regime');
+    const regimeDescEl = document.getElementById('inst-kpi-regime-desc');
+    if (regimeEl) {
+      regimeEl.innerText = (matrix.regime || 'EXPANSION').replace(/_/g, ' ');
+    }
+    if (regimeDescEl) {
+      regimeDescEl.innerText = matrix.regime_directive || 'Active Quantitative Filter Directive';
+    }
+
+    // 3. Choppiness Gate KPI
+    const chopEl = document.getElementById('inst-kpi-chop');
+    if (chopEl) {
+      const chopVal = matrix.chop_index !== undefined ? Number(matrix.chop_index).toFixed(1) : '--';
+      chopEl.innerText = `CHOP ${chopVal} ${matrix.is_choppy ? '🚨 CHOPPY' : '🚀 TREND'}`;
+      chopEl.style.color = matrix.is_choppy ? '#F87171' : '#34D399';
+    }
+
+    // 4. Institutional Flow KPI
+    const flowEl = document.getElementById('inst-kpi-flow');
+    if (flowEl) {
+      const cvdVal = matrix.cvd !== undefined ? Math.round(matrix.cvd).toLocaleString() : '0';
+      flowEl.innerText = `${matrix.flow_direction || 'NEUTRAL'} (${cvdVal})`;
+      flowEl.style.color = (matrix.flow_direction || '').includes('BULL') ? '#34D399' : ((matrix.flow_direction || '').includes('BEAR') ? '#F87171' : '#CBD5E1');
+    }
+
+    // 5. Risk-to-Reward KPI
+    const rrEl = document.getElementById('inst-kpi-rr');
+    if (rrEl) {
+      rrEl.innerText = matrix.risk_reward || '1:2.0';
+    }
+
+    // 6. Killzone Session KPI
+    const kzEl = document.getElementById('inst-kpi-kz');
+    if (kzEl) {
+      kzEl.innerText = (matrix.killzone || 'ACTIVE').replace(/_/g, ' ');
+    }
+
+    // 7. Render 21 Factor Cards
+    container.innerHTML = matrix.factors.map((f, idx) => {
+      const statusLower = (f.status || 'WATCH').toLowerCase();
+      const num = idx + 1;
+      return `
+        <div class="inst-factor-card status-${statusLower}">
+          <div class="inst-factor-header">
+            <span style="color: #F8FAFC;">${num}. ${f.name}</span>
+            <span class="inst-factor-badge badge-${statusLower}">${f.status}</span>
+          </div>
+          <div class="inst-factor-val">${f.value || '--'}</div>
+          <div class="inst-factor-desc">${f.description || ''}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderWatchlist(watchlist) {
+    const tbody = document.getElementById('watchlist-tbody');
+    if (!tbody || !watchlist || watchlist.length === 0) return;
+
+    // Check if table rows are already populated
+    const firstRow = document.getElementById(`watchlist-row-${watchlist[0].symbol}`);
+    if (!firstRow) {
+      tbody.innerHTML = '';
+      for (const item of watchlist) {
+        const isPos = item.change >= 0;
+        const changeClass = isPos ? 'positive' : 'negative';
+        const changeText = (isPos ? '+' : '') + (item.change || 0).toFixed(2) + ' (' + (isPos ? '+' : '') + (item.change_percent || 0).toFixed(2) + '%)';
+
+        const tr = document.createElement('tr');
+        tr.id = `watchlist-row-${item.symbol}`;
+        tr.innerHTML = `
+          <td>
+            <div style="font-weight: 800; font-family: monospace;">${item.symbol}</div>
+            <div style="font-size: 11px; color: var(--text-muted);">${item.name}</div>
+          </td>
+          <td class="num-mono" id="watchlist-price-${item.symbol}" style="font-size: 13px;">${formatCurrency(item.price)}</td>
+          <td class="num-mono ${changeClass}" id="watchlist-change-${item.symbol}">${changeText}</td>
+          <td id="pcr-cell-${item.symbol}"><span class="feature-chip" style="background: rgba(148, 163, 184, 0.15);">--</span></td>
+          <td id="signal-cell-${item.symbol}"><span class="signal-tag signal-hold">SCANNING</span></td>
+          <td id="pattern-cell-${item.symbol}" style="font-size: 11px; color: var(--text-muted);">--</td>
+          <td>
+            <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="inspectStock('${item.symbol}')">Inspect</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+
+        // Fetch individual option signals with non-blocking fetch
+        fetch(`/api/v1/market/signals/options/${item.symbol}`)
+          .then(r => r.json())
+          .then(sig => {
+            const sigCell = document.getElementById(`signal-cell-${item.symbol}`);
+            const pcrCell = document.getElementById(`pcr-cell-${item.symbol}`);
+            const patCell = document.getElementById(`pattern-cell-${item.symbol}`);
+
+            if (sigCell && sig) {
+              const tagClass = sig.signal_type === 'BULLISH' ? 'signal-buy' : (sig.signal_type === 'BEARISH' ? 'signal-sell' : 'signal-hold');
+              sigCell.innerHTML = `<span class="signal-tag ${tagClass}">${sig.recommendation}</span>`;
+            }
+
+            if (pcrCell && sig && sig.pcr) {
+              const pcrVal = sig.pcr.pcr_oi;
+              const pcrColor = pcrVal >= 1.05 ? '#34D399' : (pcrVal <= 0.85 ? '#F87171' : '#CBD5E1');
+              pcrCell.innerHTML = `<span class="feature-chip" style="background: rgba(30, 41, 59, 0.6); color: ${pcrColor};">${pcrVal} (${sig.pcr.sentiment.slice(0,4)})</span>`;
+            }
+
+            if (patCell && sig) {
+              let tag = [];
+              if (sig.price_action_momentum && sig.price_action_momentum.momentum_regime) {
+                tag.push(sig.price_action_momentum.momentum_regime.replace(/_/g, ' '));
+              }
+              if (sig.candle_patterns && sig.candle_patterns.length > 0) tag.push(sig.candle_patterns[0].name);
+              if (sig.order_blocks && sig.order_blocks.smc_bias.includes('ORDER_BLOCK')) tag.push(sig.order_blocks.smc_bias);
+              patCell.innerText = tag.join(' • ') || 'Range Consolidation';
+            }
+          })
+          .catch(err => console.debug('Option fetch error:', err));
+      }
+    } else {
+      // In-place ultra-fast updates for live tick prices
+      for (const item of watchlist) {
+        const priceEl = document.getElementById(`watchlist-price-${item.symbol}`);
+        const changeEl = document.getElementById(`watchlist-change-${item.symbol}`);
+        if (priceEl) priceEl.innerText = formatCurrency(item.price);
+        if (changeEl) {
+          const isPos = (item.change || 0) >= 0;
+          changeEl.className = `num-mono ${isPos ? 'positive' : 'negative'}`;
+          changeEl.innerText = `${isPos ? '+' : ''}${(item.change || 0).toFixed(2)} (${isPos ? '+' : ''}${(item.change_percent || 0).toFixed(2)}%)`;
+        }
+      }
+    }
+  }
+
+  async function loadWatchlist() {
+    try {
+      const res = await fetch('/api/v1/market/watchlist');
+      const data = await res.json();
+      renderWatchlist(data);
+    } catch (e) {
+      console.error('Error fetching watchlist:', e);
+    }
+  }
+
+  async function loadPortfolio() {
+    try {
+      const res = await fetch('/api/v1/paper/portfolio');
+      const data = await res.json();
+
+      document.getElementById('port-cash').innerText = formatCurrency(data.available_cash);
+      document.getElementById('port-value').innerText = formatCurrency(data.total_portfolio_value);
+
+      const tbody = document.getElementById('positions-tbody');
+      tbody.innerHTML = '';
+
+      if (!data.positions || data.positions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 12px;">No active paper positions</td></tr>';
+        return;
+      }
+
+      data.positions.forEach(pos => {
+        const isPos = pos.unrealized_pnl >= 0;
+        const pnlClass = isPos ? 'positive' : 'negative';
+        const pnlText = (isPos ? '+' : '') + formatCurrency(pos.unrealized_pnl);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight: 700; font-family: monospace;">${pos.symbol}</td>
+          <td class="num-mono">${pos.quantity}</td>
+          <td class="num-mono">${formatCurrency(pos.average_buy_price)}</td>
+          <td class="num-mono">${formatCurrency(pos.current_price)}</td>
+          <td class="num-mono ${pnlClass}">${pnlText}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (e) {
+      console.error('Error fetching portfolio:', e);
+    }
+  }
+
+  async function executeTrade(side) {
+    const symbol = document.getElementById('trade-symbol').value.trim().toUpperCase();
+    const qty = parseInt(document.getElementById('trade-qty').value, 10);
+
+    if (!symbol || !qty || qty <= 0) {
+      showToast('⚠️ Please enter a valid Symbol and Quantity');
+      return;
+    }
+
+    try {
+      // 1. Fetch current price
+      const pRes = await fetch(`/api/v1/market/price/${symbol}`);
+      if (!pRes.ok) {
+        showToast(`❌ Could not fetch price for ${symbol}`);
+        return;
+      }
+      const pData = await pRes.json();
+      const price = pData.price;
+
+      const endpoint = side === 'BUY' ? '/api/v1/paper/buy' : '/api/v1/paper/sell';
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: symbol, quantity: qty, price: price })
+      });
+
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        showToast(`✅ ${side} order filled for ${qty}x ${symbol} @ ₹${price.toFixed(2)}`);
+        loadPortfolio();
+      } else {
+        showToast(`❌ Trade failed: ${resData.detail || resData.message || 'Execution error'}`);
+      }
+    } catch (e) {
+      showToast(`❌ Trade error: ${e.message}`);
+    }
+  }
+
+  function prefillTrade(symbol, defaultQty = 1) {
+    document.getElementById('trade-symbol').value = symbol;
+    document.getElementById('trade-qty').value = defaultQty;
+    showToast(`📝 Selected ${symbol} for paper order`);
+    document.getElementById('trade-symbol').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function inspectStock(symbol) {
+    document.getElementById('custom-symbol').value = symbol;
+    searchStock();
+    document.getElementById('search-result-box').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  async function searchStock() {
+    const sym = document.getElementById('custom-symbol').value.trim().toUpperCase();
+    if (!sym) return;
+
+    const resBox = document.getElementById('search-result-box');
+    resBox.style.display = 'block';
+    resBox.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 12px;">Scanning full technical, SMC, and options confluence for ' + sym + '...</div>';
+
+    try {
+      const res = await fetch(`/api/v1/market/signals/options/${sym}`);
+      if (!res.ok) {
+        resBox.innerHTML = `<div style="color: var(--accent-red);">Failed to retrieve data for ${sym}. Verify the symbol ticker.</div>`;
+        return;
+      }
+      const data = await res.json();
+      const isBull = data.signal_type === 'BULLISH';
+      const isBear = data.signal_type === 'BEARISH';
+      const tagClass = isBull ? 'signal-buy' : (isBear ? 'signal-sell' : 'signal-hold');
+
+      let reasonsHtml = (data.confluence_reasons || []).map(r => `
+        <li style="margin-bottom: 4px;">
+          <span style="color: ${r.toLowerCase().includes('bullish') || r.toLowerCase().includes('breakout') ? 'var(--accent-green)' : 'var(--accent-red)'}">●</span>
+          <span>${r}</span>
+        </li>
+      `).join('');
+
+      resBox.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div>
+            <span style="font-size: 16px; font-weight: 800; font-family: monospace;">${data.instrument || data.symbol}</span>
+            <span style="font-size: 18px; font-weight: 900; margin-left: 10px; font-family: 'JetBrains Mono';">${formatCurrency(data.spot_price)}</span>
+          </div>
+          <span class="signal-tag ${tagClass}" style="font-size: 12px; padding: 4px 10px;">${data.recommendation}</span>
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+          <span class="strike-tag">STRIKE: ${data.suggested_strike}</span>
+          <span class="feature-chip" style="background: rgba(30, 41, 59, 0.8);">Confidence: ${data.confidence_score}%</span>
+          <span class="feature-chip" style="background: rgba(30, 41, 59, 0.8);">R:R: ${data.risk_reward_ratio}</span>
+          ${data.pcr ? `<span class="feature-chip" style="background: rgba(168, 85, 247, 0.2); color: #D8B4FE;">PCR: ${data.pcr.pcr_oi}</span>` : ''}
+          ${data.day_levels ? `<span class="feature-chip" style="background: rgba(56, 189, 248, 0.2); color: #38BDF8;">CPR: ${data.day_levels.cpr ? data.day_levels.cpr.cpr_type : 'N/A'}</span>` : ''}
+        </div>
+
+        <!-- 1. OPTION EXECUTION BOX -->
+        <div class="option-pricing-box" style="margin-bottom: 8px;">
+          <div class="option-pricing-title">
+            <span>💰 OPTION CONTRACT EXECUTION (₹)</span>
+            <span>LOT: ${data.lot_size} | CAPITAL: ${formatCurrency(data.capital_required_per_lot)}</span>
+          </div>
+          <div class="levels-grid-4" style="margin: 0 0 6px 0; background: transparent; padding: 0;">
+            <div class="level-box">
+              <div class="level-box-label">Option Buy (₹)</div>
+              <div class="level-box-val entry-val">${formatCurrency(data.option_entry_price)}</div>
+            </div>
+            <div class="level-box">
+              <div class="level-box-label">Target 1 (₹)</div>
+              <div class="level-box-val positive">${formatCurrency(data.option_target_1)}</div>
+            </div>
+            <div class="level-box">
+              <div class="level-box-label">Target 2 (₹)</div>
+              <div class="level-box-val positive">${formatCurrency(data.option_target_2)}</div>
+            </div>
+            <div class="level-box">
+              <div class="level-box-label">Stop Loss (₹)</div>
+              <div class="level-box-val negative">${formatCurrency(data.option_stop_loss)}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. UNDERLYING SPOT REFERENCE -->
+        <div class="spot-levels-box" style="margin-bottom: 8px;">
+          <div class="spot-levels-title">📍 Underlying Spot Reference (Index / Stock Trigger Levels)</div>
+          <div class="spot-levels-grid">
+            <div><span style="color: var(--text-muted);">Spot:</span> <b>${formatCurrency(data.spot_levels ? data.spot_levels.spot_entry : data.spot_price)}</b></div>
+            <div><span style="color: var(--text-muted);">T1:</span> <b style="color: var(--accent-green);">${formatCurrency(data.spot_levels ? data.spot_levels.spot_target_1 : data.target_1)}</b></div>
+            <div><span style="color: var(--text-muted);">T2:</span> <b style="color: var(--accent-green);">${formatCurrency(data.spot_levels ? data.spot_levels.spot_target_2 : data.target_2)}</b></div>
+            <div><span style="color: var(--text-muted);">SL:</span> <b style="color: var(--accent-red);">${formatCurrency(data.spot_levels ? data.spot_levels.spot_stop_loss : data.stop_loss)}</b></div>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Confluence Factor Diagnostics</div>
+        <ul class="checklist" style="margin-bottom: 10px;">${reasonsHtml}</ul>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-green" onclick="prefillTrade('${data.symbol}', ${data.lot_size})">Execute Paper Order</button>
+          <button class="btn" style="background: rgba(56, 189, 248, 0.15); color: #38BDF8; border-color: rgba(56, 189, 248, 0.4);" onclick="sendSignalToTelegram('${data.symbol}')">📱 Telegram</button>
+          <button class="btn" style="background: rgba(225, 48, 108, 0.15); color: #FB7185; border-color: rgba(225, 48, 108, 0.4);" onclick="sendSignalToInstagram('${data.symbol}')">📸 Instagram (9100040008)</button>
+        </div>
+      `;
+    } catch (e) {
+      resBox.innerHTML = `<div style="color: var(--accent-red);">Scanner error: ${e.message}</div>`;
+    }
+  }
+
+  // Telegram Alerts Controller
+  function openTelegramModal() {
+    document.getElementById('telegram-modal').style.display = 'flex';
+    loadTelegramStatus();
+  }
+
+  function closeTelegramModal() {
+    document.getElementById('telegram-modal').style.display = 'none';
+  }
+
+  async function loadTelegramStatus() {
+    try {
+      const res = await fetch('/api/v1/telegram/status');
+      const data = await res.json();
+      const badge = document.getElementById('tg-bot-status-badge');
+      const target = document.getElementById('tg-target-chat');
+      if (target) target.innerText = data.target_chat_id || '9100040008';
+      if (badge) {
+        if (data.configured) {
+          badge.innerText = 'ONLINE / READY';
+          badge.style.background = 'rgba(16, 185, 129, 0.2)';
+          badge.style.color = '#34D399';
+        } else {
+          badge.innerText = 'TOKEN PENDING';
+          badge.style.background = 'rgba(245, 158, 11, 0.2)';
+          badge.style.color = '#FBBF24';
+        }
+      }
+    } catch (e) {
+      console.error('Error fetching Telegram status:', e);
+    }
+  }
+
+  function appendTelegramLog(msg) {
+    const consoleEl = document.getElementById('tg-log-console');
+    if (!consoleEl) return;
+    const time = new Date().toLocaleTimeString();
+    consoleEl.innerText = `[${time}] ${msg}\n` + consoleEl.innerText;
+  }
+
+  async function sendSignalToTelegram(symbol) {
+    if (!symbol) return;
+    showToast(`📱 Dispatching ${symbol} signal alert to Telegram (9100040008)...`);
+    appendTelegramLog(`Sending signal for ${symbol} to Telegram...`);
+    try {
+      const res = await fetch(`/api/v1/telegram/send-signal/${encodeURIComponent(symbol)}`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      const del = data.delivery_result || {};
+      if (del.success) {
+        showToast(`✅ Alert successfully sent to Telegram: ${symbol}`);
+        appendTelegramLog(`✅ Sent ${symbol} (${data.signal_sent.recommendation}) to Telegram ID: ${del.chat_id}`);
+      } else {
+        showToast(`⚠️ ${del.message || 'Failed to dispatch alert'}`);
+        appendTelegramLog(`⚠️ Delivery notice: ${del.message}`);
+        if (del.preview_text) {
+          openTelegramModal();
+        }
+      }
+    } catch (e) {
+      showToast(`❌ Telegram request failed: ${e.message}`);
+      appendTelegramLog(`❌ Error: ${e.message}`);
+    }
+  }
+
+  async function testTelegramPing() {
+    appendTelegramLog('Sending test ping to Telegram (9100040008)...');
+    showToast('🔔 Sending test ping to Telegram...');
+    try {
+      const res = await fetch('/api/v1/telegram/test', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        showToast('✅ Test ping successfully delivered to 9100040008!');
+        appendTelegramLog(`✅ Test ping delivered! Message ID: ${data.message_id}`);
+      } else {
+        showToast(`⚠️ ${data.message}`);
+        appendTelegramLog(`⚠️ Notice: ${data.message}`);
+      }
+    } catch (e) {
+      showToast(`❌ Test ping failed: ${e.message}`);
+      appendTelegramLog(`❌ Error: ${e.message}`);
+    }
+  }
+
+  async function broadcastAllSignals() {
+    showToast('⚡ Scanning and broadcasting all active BUY CALL/PUT signals to Telegram...');
+    appendTelegramLog('Starting multi-market broadcast (NIFTY, BANK NIFTY, SENSEX, Commodities)...');
+    try {
+      const res = await fetch('/api/v1/telegram/broadcast-all', { method: 'POST' });
+      const data = await res.json();
+      showToast(`✅ Dispatched ${data.total_dispatched} signals to Telegram (9100040008)!`);
+      appendTelegramLog(`✅ Broadcast complete: ${data.total_dispatched} of ${data.total_scanned} signals dispatched.`);
+      (data.dispatched || []).forEach(d => {
+        appendTelegramLog(`  • ${d.instrument}: ${d.recommendation} [${d.strike}] -> ${d.delivery.status || 'SENT'}`);
+      });
+    } catch (e) {
+      showToast(`❌ Broadcast error: ${e.message}`);
+      appendTelegramLog(`❌ Broadcast failed: ${e.message}`);
+    }
+  }
+
+  async function saveTelegramConfig() {
+    const token = document.getElementById('tg-bot-token-input').value.trim();
+    if (!token) {
+      showToast('⚠️ Please enter a valid Bot Token');
+      return;
+    }
+    showToast('💾 Saving Telegram configuration...');
+    try {
+      const res = await fetch('/api/v1/telegram/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bot_token: token, chat_id: '9100040008' }),
+      });
+      const data = await res.json();
+      showToast('✅ Telegram configuration saved!');
+      appendTelegramLog('✅ Bot Token configured successfully for chat: 9100040008');
+      loadTelegramStatus();
+    } catch (e) {
+      showToast(`❌ Failed to save config: ${e.message}`);
+    }
+  }
+
+  // Instagram Alerts Controller
+  function openInstagramModal() {
+    document.getElementById('instagram-modal').style.display = 'flex';
+    loadInstagramStatus();
+  }
+
+  function closeInstagramModal() {
+    document.getElementById('instagram-modal').style.display = 'none';
+  }
+
+  async function loadInstagramStatus() {
+    try {
+      const res = await fetch('/api/v1/instagram/status');
+      const data = await res.json();
+      const badge = document.getElementById('ig-status-badge');
+      const target = document.getElementById('ig-target-recipient');
+      if (target) target.innerText = data.target_recipient || '9100040008';
+      if (badge) {
+        if (data.configured) {
+          badge.innerText = 'ONLINE / READY';
+          badge.style.background = 'rgba(16, 185, 129, 0.2)';
+          badge.style.color = '#34D399';
+        } else {
+          badge.innerText = 'READY (DM / WEBHOOK)';
+          badge.style.background = 'rgba(244, 63, 94, 0.2)';
+          badge.style.color = '#FB7185';
+        }
+      }
+    } catch (e) {
+      console.error('Error fetching Instagram status:', e);
+    }
+  }
+
+  function appendInstagramLog(msg) {
+    const consoleEl = document.getElementById('ig-log-console');
+    if (!consoleEl) return;
+    const time = new Date().toLocaleTimeString();
+    consoleEl.innerText = `[${time}] ${msg}\n` + consoleEl.innerText;
+  }
+
+  async function sendSignalToInstagram(symbol) {
+    if (!symbol) return;
+    showToast(`📸 Dispatching ${symbol} signal alert to Instagram (9100040008)...`);
+    appendInstagramLog(`Sending signal for ${symbol} to Instagram...`);
+    try {
+      const res = await fetch(`/api/v1/instagram/send-signal/${encodeURIComponent(symbol)}`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      const del = data.delivery_result || {};
+      if (del.success) {
+        showToast(`✅ Alert successfully dispatched to Instagram (9100040008)!`);
+        appendInstagramLog(`✅ Sent ${symbol} (${data.signal_sent.recommendation}) [${data.signal_sent.suggested_strike}] -> Status: ${del.status}`);
+      } else {
+        showToast(`⚠️ ${del.error || del.message || 'Delivery notice'}`);
+        appendInstagramLog(`⚠️ Delivery notice: ${del.error || del.message}`);
+      }
+    } catch (e) {
+      showToast(`❌ Instagram request failed: ${e.message}`);
+      appendInstagramLog(`❌ Error: ${e.message}`);
+    }
+  }
+
+  async function testInstagramPing() {
+    appendInstagramLog('Sending test ping to Instagram (9100040008)...');
+    showToast('🔔 Sending test ping to Instagram...');
+    try {
+      const res = await fetch('/api/v1/instagram/test', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        showToast('✅ Test ping successfully delivered to 9100040008!');
+        appendInstagramLog(`✅ Test ping delivered! Mode: ${data.status || 'READY'}`);
+      } else {
+        showToast(`⚠️ ${data.message || data.error}`);
+        appendInstagramLog(`⚠️ Notice: ${data.message || data.error}`);
+      }
+    } catch (e) {
+      showToast(`❌ Test ping failed: ${e.message}`);
+      appendInstagramLog(`❌ Error: ${e.message}`);
+    }
+  }
+
+  async function broadcastAllSignalsInstagram() {
+    showToast('⚡ Scanning and broadcasting all active BUY CALL/PUT signals to Instagram...');
+    appendInstagramLog('Starting multi-market Instagram broadcast (NIFTY, BANK NIFTY, SENSEX, Commodities)...');
+    try {
+      const res = await fetch('/api/v1/instagram/broadcast-all', { method: 'POST' });
+      const data = await res.json();
+      showToast(`✅ Dispatched ${data.dispatched_count} signals to Instagram (9100040008)!`);
+      appendInstagramLog(`✅ Broadcast complete: ${data.dispatched_count} of ${data.total_scanned} signals dispatched.`);
+      (data.dispatched || []).forEach(d => {
+        appendInstagramLog(`  • ${d.symbol}: ${d.recommendation} [${d.strike}] -> ${d.delivery}`);
+      });
+    } catch (e) {
+      showToast(`❌ Broadcast error: ${e.message}`);
+      appendInstagramLog(`❌ Broadcast failed: ${e.message}`);
+    }
+  }
+
+  let lastAuditFetchTime = 0;
+
+  function triggerManualRefresh() {
+    showToast('🔄 Refreshing all quantitative models, VIX, GIFT NIFTY, commodities & news...');
+    runRealTimeTick();
+    loadNews(true);
+    loadAuditData();
+  }
+
+  // Trade Audit & Autonomous Self-Correction Controller
+  async function loadAuditData() {
+    try {
+      const res = await fetch('/api/v1/audit/summary');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      // 1. Stats Counter Cards
+      const elTotal = document.getElementById('audit-total-alerts');
+      const elActive = document.getElementById('audit-active-alerts');
+      const elTargetHits = document.getElementById('audit-target-hits');
+      const elSlExits = document.getElementById('audit-sl-exits');
+      const elCorrections = document.getElementById('audit-corrections-count');
+      const elWinRate = document.getElementById('audit-win-rate');
+
+      if (elTotal) elTotal.innerText = data.total_alerts_logged || 0;
+      if (elActive) elActive.innerText = data.active_alerts_count || 0;
+      if (elTargetHits) elTargetHits.innerText = data.target_1_and_2_hits || 0;
+      if (elSlExits) elSlExits.innerText = data.stop_loss_exits || 0;
+      if (elCorrections) elCorrections.innerText = data.total_corrections_dispatched || 0;
+      if (elWinRate) elWinRate.innerText = (data.accuracy_win_rate_pct || 100) + '%';
+
+      // 2. Active Alerts Table
+      const tbody = document.getElementById('audit-active-tbody');
+      if (tbody) {
+        const activeList = data.active_alerts || [];
+        if (activeList.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 14px;">No active alerts under surveillance. Alerts will appear here when generated or dispatched.</td></tr>';
+        } else {
+          tbody.innerHTML = activeList.map(a => {
+            const isCall = (a.recommendation || '').includes('CALL');
+            const isTarget1 = a.target_1_hit || a.status === 'TARGET_1_HIT';
+            const statusBg = isTarget1 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(56, 189, 248, 0.2)';
+            const statusColor = isTarget1 ? '#34D399' : '#38BDF8';
+            const statusText = isTarget1 ? 'TARGET 1 (+5 PTS) HIT • TRAILING SL' : 'ACTIVE • AUDITING';
+
+            return `
+              <tr>
+                <td>
+                  <b style="font-family: monospace; color: white;">${a.instrument || a.symbol}</b><br>
+                  <span style="font-size: 10px; color: var(--text-muted); font-family: monospace;">${a.alert_id}</span>
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: ${isCall ? 'var(--accent-green)' : 'var(--accent-red)'}">${a.recommendation}</span><br>
+                  <span style="font-size: 11px; color: #38BDF8; font-family: monospace;">${a.suggested_strike}</span>
+                </td>
+                <td style="font-family: 'JetBrains Mono'; font-weight: 700;">₹${Number(a.option_entry_price || 0).toFixed(2)}</td>
+                <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #FBBF24;">₹${Number(a.current_opt_estimated || a.option_entry_price || 0).toFixed(2)}</td>
+                <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: var(--accent-green);">₹${Number(a.option_target_1 || 0).toFixed(2)}</td>
+                <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: var(--accent-red);">₹${Number(a.option_stop_loss || 0).toFixed(2)}</td>
+                <td>
+                  <span style="font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: ${statusBg}; color: ${statusColor};">
+                    ${statusText}
+                  </span>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      // 3. Corrections Feed
+      const corrFeed = document.getElementById('audit-corrections-feed');
+      if (corrFeed) {
+        const corrList = data.recent_corrections || [];
+        if (corrList.length === 0) {
+          corrFeed.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 14px; font-size: 12px;">No mistake invalidations detected yet. When an adverse move or SL breach occurs, instant correction notices are logged and dispatched here.</div>';
+        } else {
+          corrFeed.innerHTML = corrList.slice().reverse().map(c => `
+            <div class="correction-item ${c.is_success ? 'success-item' : ''}">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <b style="color: ${c.is_success ? '#34D399' : '#F87171'}; font-family: monospace;">${c.type.replace(/_/g, ' ')}</b>
+                <span style="font-size: 10px; color: var(--text-muted);">${c.ist_time || ''}</span>
+              </div>
+              <div style="font-size: 11px; margin-bottom: 3px;">
+                <b>${c.instrument} (${c.original_recommendation} [${c.suggested_strike}])</b>
+              </div>
+              <div style="font-size: 11px; color: #CBD5E1; margin-bottom: 4px;">
+                ${c.reason}
+              </div>
+              <div style="font-size: 11px; font-weight: 700; color: ${c.is_success ? '#34D399' : '#FBBF24'};">
+                ${c.action_directive}
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+
+      // 4. Live Text Log Terminal
+      loadAuditLogs();
+    } catch (e) {
+      console.error('Audit load error:', e);
+    }
+  }
+
+  async function loadAuditLogs() {
+    try {
+      const res = await fetch('/api/v1/audit/logs?limit=40');
+      if (!res.ok) return;
+      const data = await res.json();
+      const term = document.getElementById('audit-log-terminal');
+      if (term && data.logs && data.logs.length > 0) {
+        term.innerText = data.logs.join('\n');
+        term.scrollTop = term.scrollHeight;
+      }
+    } catch (e) {
+      console.error('Audit log fetch error:', e);
+    }
+  }
+
+  async function triggerAuditScan() {
+    showToast('⚡ Running deep live price action audit & autonomous mistake detection...');
+    try {
+      const res = await fetch('/api/v1/audit/check-now', { method: 'POST' });
+      const data = await res.json();
+      const count = data.corrections_triggered_count || 0;
+      if (count > 0) {
+        showToast(`🚨 Detected & dispatched ${count} autonomous trade correction(s) to 9100040008!`);
+      } else {
+        showToast('🛡️ Audit complete: All active trade alerts within healthy parameters.');
+      }
+      loadAuditData();
+    } catch (e) {
+      showToast(`❌ Audit error: ${e.message}`);
+    }
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    runRealTimeTick();
+    loadNews(false);
+    startAutoRefresh();
+    loadTelegramStatus();
+    loadInstagramStatus();
+    loadAuditData();
+  });
+</script>
+
+  <!-- Telegram Alert Manager Modal -->
+  <div class="modal-backdrop" id="telegram-modal" onclick="if(event.target === this) closeTelegramModal()">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeTelegramModal()">✕</button>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+        <span style="font-size: 24px;">📱</span>
+        <div>
+          <h2 style="font-size: 16px; font-weight: 800; color: white;">Telegram Trade Alerts Manager</h2>
+          <p style="font-size: 11px; color: var(--text-muted);">Dispatches high-probability CALL/PUT option strike execution alerts</p>
+        </div>
+      </div>
+
+      <!-- Config & Status Box -->
+      <div style="background: #080D1A; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px;">
+          <span style="color: var(--text-muted);">Destination Chat / Target:</span>
+          <b style="color: var(--accent-blue); font-family: 'JetBrains Mono';" id="tg-target-chat">9100040008</b>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px;">
+          <span style="color: var(--text-muted);">Bot Status:</span>
+          <span id="tg-bot-status-badge" style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(56, 189, 248, 0.2); color: #38BDF8; font-weight: 700;">CHECKING...</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px;">
+          <span style="color: var(--text-muted);">Alert Filter Rule:</span>
+          <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.15); color: #34D399; font-weight: 700;">Market Hours Only • Min +5 Pts Move</span>
+        </div>
+        <div style="margin-top: 10px;">
+          <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Update Bot Token (from @BotFather):</label>
+          <div style="display: flex; gap: 6px;">
+            <input type="password" id="tg-bot-token-input" class="input-text" placeholder="e.g. 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" style="flex: 1; font-size: 12px; padding: 6px 10px;">
+            <button class="btn btn-primary" style="padding: 6px 12px;" onclick="saveTelegramConfig()">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;">
+        <button class="btn" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34D399; font-weight: 700; justify-content: center; padding: 9px;" onclick="testTelegramPing()">
+          🔔 Test Ping (9100040008)
+        </button>
+        <button class="btn" style="background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.5); color: #38BDF8; font-weight: 700; justify-content: center; padding: 9px;" onclick="broadcastAllSignals()">
+          ⚡ Broadcast All Signals
+        </button>
+      </div>
+
+      <!-- Live Delivery Log Output -->
+      <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Live Delivery Console</div>
+      <div id="tg-log-console" style="background: #050811; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #CBD5E1; max-height: 140px; overflow-y: auto; white-space: pre-wrap;">Ready to dispatch alerts to 9100040008.</div>
+    </div>
+  </div>
+
+  <!-- Instagram Alert Manager Modal -->
+  <div class="modal-backdrop" id="instagram-modal" onclick="if(event.target === this) closeInstagramModal()">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeInstagramModal()">✕</button>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+        <span style="font-size: 24px;">📸</span>
+        <div>
+          <h2 style="font-size: 16px; font-weight: 800; color: white;">Instagram Trade Alerts Manager</h2>
+          <p style="font-size: 11px; color: var(--text-muted);">Dispatches high-probability PUT & CALL Option alerts to 9100040008</p>
+        </div>
+      </div>
+
+      <!-- Config & Status Box -->
+      <div style="background: #080D1A; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px;">
+          <span style="color: var(--text-muted);">Target Recipient / Phone:</span>
+          <b style="color: #FB7185; font-family: 'JetBrains Mono';" id="ig-target-recipient">9100040008</b>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px;">
+          <span style="color: var(--text-muted);">Alert Channel:</span>
+          <span id="ig-status-badge" style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(244, 63, 94, 0.2); color: #FB7185; font-weight: 700;">READY</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px;">
+          <span style="color: var(--text-muted);">Alert Filter Rule:</span>
+          <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.15); color: #34D399; font-weight: 700;">Market Hours Only • Min +5 Pts Move</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
+          Configured for direct option strike recommendations, entries, targets (T1/T2), stop losses, and lot sizing.
+        </div>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;">
+        <button class="btn" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34D399; font-weight: 700; justify-content: center; padding: 9px;" onclick="testInstagramPing()">
+          🔔 Test Ping (9100040008)
+        </button>
+        <button class="btn" style="background: linear-gradient(135deg, rgba(225, 48, 108, 0.2), rgba(131, 58, 180, 0.2)); border-color: rgba(225, 48, 108, 0.5); color: #FB7185; font-weight: 700; justify-content: center; padding: 9px;" onclick="broadcastAllSignalsInstagram()">
+          🚀 Broadcast All (IG)
+        </button>
+      </div>
+
+      <!-- Live Delivery Log Output -->
+      <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Live Delivery Console</div>
+      <div id="ig-log-console" style="background: #050811; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #CBD5E1; max-height: 140px; overflow-y: auto; white-space: pre-wrap;">Ready to dispatch Instagram alerts to 9100040008.</div>
+    </div>
+  </div>
+
+</body>
+</html>

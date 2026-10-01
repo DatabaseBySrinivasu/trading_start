@@ -54,6 +54,11 @@ ENV/
 env.bak/
 venv.bak/
 
+# Logs and runtime data
+logs/
+*.log
+*.jsonl
+
 # IDE / Editor files
 .claude/
 .vscode/
