@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 from app.services.angel_service import angel_client
+from app.services.local_data_service import local_data_service
 
 logger = logging.getLogger(__name__)
 
@@ -316,6 +317,9 @@ class MarketDataService:
                     }
                     self._price_cache[canon] = {"data": updated_entry, "_timestamp": now}
                     self._price_cache[sym] = {"data": updated_entry, "_timestamp": now}
+                    # Persist real-time tick to local daily jsonl stream
+                    if sym in ["^NSEI", "^BSESN", "^NSEBANK", "CRUDEOIL", "NATURALGAS", "GOLD", "SILVER", "COPPER", "RELIANCE", "TCS"]:
+                        local_data_service.log_live_tick(canon, updated_entry)
 
                 # 3. Autonomous active trade audit & trend reversal monitoring (checks active trades every 3s)
                 if int(now) % 3 == 0:
@@ -678,6 +682,12 @@ class MarketDataService:
             self._snapshot_cache = snapshot
             self._snapshot_timestamp = now
 
+        # Persist snapshot locally for audit replay
+        try:
+            local_data_service.save_market_snapshot(snapshot)
+        except Exception as snap_err:
+            logger.debug(f"Snapshot local persistence notice: {snap_err}")
+
         return snapshot
 
     def get_historical_candles(
@@ -697,7 +707,7 @@ class MarketDataService:
         cache_key = f"{canonical}_{period}_{interval}"
         now = time.time()
 
-        # Cache candles for 60 seconds
+        # Cache candles in-memory for 60 seconds
         if cache_key in self._df_cache:
             return self._df_cache[cache_key].copy()
 
@@ -728,15 +738,35 @@ class MarketDataService:
                             for col in ["open", "high", "low", "close"]:
                                 clean_df[col] = clean_df[col] * scale
 
-                    self._df_cache[cache_key] = clean_df
-                    return clean_df.copy()
+                    # Persist / Merge into local storage
+                    try:
+                        merged_df = local_data_service.merge_and_save_candles(canonical, interval, clean_df)
+                        self._df_cache[cache_key] = merged_df
+                        return merged_df.copy()
+                    except Exception as save_err:
+                        logger.debug(f"Local candle merge error for {canonical}: {save_err}")
+                        self._df_cache[cache_key] = clean_df
+                        return clean_df.copy()
         except Exception as e:
-            logger.debug(f"Historical candles fallback for {symbol}: {e}")
+            logger.debug(f"Historical candles online fetch notice for {symbol}: {e}")
+
+        # Try to load existing local historical candles from disk first
+        try:
+            local_df = local_data_service.load_candles(canonical, interval)
+            if local_df is not None and not local_df.empty and len(local_df) >= 10:
+                self._df_cache[cache_key] = local_df
+                return local_df.copy()
+        except Exception as load_err:
+            logger.debug(f"Local candle load notice for {canonical}: {load_err}")
 
         # Fallback to synthetic candle series to guarantee uninterrupted algorithmic analysis
         live = self.get_live_price(canonical)
         base_price = live["price"] if live else 1000.0
         synthetic_df = self._generate_synthetic_df(base_price=base_price, periods=50)
+        try:
+            local_data_service.save_candles(canonical, interval, synthetic_df)
+        except Exception:
+            pass
         self._df_cache[cache_key] = synthetic_df
         return synthetic_df.copy()
 

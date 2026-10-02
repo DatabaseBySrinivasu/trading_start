@@ -1221,6 +1221,11 @@
         <span id="angel-status-text" style="color: #94A3B8;">Angel One: Checking...</span>
       </div>
 
+      <!-- Local Data Persistence Badge & Sync Trigger -->
+      <button class="btn" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(56, 189, 248, 0.4); color: #38BDF8; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 11px;" onclick="openLocalStorageModal()" title="View and sync all multi-timeframe candles and tick archives to local disk">
+        💾 Local Store: <span id="local-storage-summary">Active</span>
+      </button>
+
       <!-- Auto Refresh Controller -->
       <div class="refresh-controller">
         <span class="live-dot" id="pulse-indicator"></span>
@@ -3519,10 +3524,11 @@
   let lastAuditFetchTime = 0;
 
   function triggerManualRefresh() {
-    showToast('🔄 Refreshing all quantitative models, VIX, GIFT NIFTY, commodities & news...');
+    showToast('🔄 Refreshing all quantitative models, VIX, GIFT NIFTY, commodities, local data & news...');
     runRealTimeTick();
     loadNews(true);
     loadAuditData();
+    loadLocalStorageStatus();
   }
 
   // Trade Audit & Autonomous Self-Correction Controller
@@ -3652,6 +3658,88 @@
     }
   }
 
+  // Local Market Data Storage & Historical Persistence Controller
+  async function loadLocalStorageStatus() {
+    try {
+      const res = await fetch('/api/v1/market/local-data/status');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const summaryEl = document.getElementById('local-storage-summary');
+      if (summaryEl) {
+        summaryEl.innerText = `${data.total_stored_files || 0} Files (${Number(data.total_historical_candles || 0).toLocaleString()} Candles)`;
+      }
+
+      // Populate modal elements if present
+      const elFiles = document.getElementById('local-store-total-files');
+      const elCandles = document.getElementById('local-store-total-candles');
+      const elDisk = document.getElementById('local-store-disk-mb');
+      const elTicks = document.getElementById('local-store-tick-files');
+      const elSnaps = document.getElementById('local-store-snap-files');
+      const tbody = document.getElementById('local-store-datasets-tbody');
+
+      if (elFiles) elFiles.innerText = data.total_stored_files || 0;
+      if (elCandles) elCandles.innerText = Number(data.total_historical_candles || 0).toLocaleString();
+      if (elDisk) elDisk.innerText = `${data.total_disk_usage_mb || 0} MB`;
+      if (elTicks) elTicks.innerText = data.live_tick_files_count || 0;
+      if (elSnaps) elSnaps.innerText = data.snapshot_files_count || 0;
+
+      if (tbody && data.datasets) {
+        if (data.datasets.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 12px;">No historical datasets stored yet. Click "Sync All Tracked Symbols" to populate local disk.</td></tr>';
+        } else {
+          tbody.innerHTML = data.datasets.map(ds => `
+            <tr>
+              <td style="font-family: monospace; font-weight: 700; color: white;">${ds.symbol}</td>
+              <td><span style="font-family: monospace; padding: 2px 6px; border-radius: 4px; background: rgba(56, 189, 248, 0.15); color: #38BDF8; font-size: 11px;">${ds.interval}</span></td>
+              <td class="num-mono" style="color: #34D399; font-weight: 700;">${Number(ds.candle_count || 0).toLocaleString()}</td>
+              <td class="num-mono" style="color: var(--text-muted);">${ds.size_kb} KB</td>
+            </tr>
+          `).join('');
+        }
+      }
+    } catch (e) {
+      console.debug('Error loading local storage status:', e);
+    }
+  }
+
+  async function syncLocalMarketData() {
+    showToast('💾 Initiating multi-timeframe historical candle sync for all tracked symbols...');
+    const syncBtn = document.getElementById('local-sync-btn');
+    if (syncBtn) {
+      syncBtn.disabled = true;
+      syncBtn.innerText = '⏳ Syncing Data...';
+    }
+    try {
+      const res = await fetch('/api/v1/market/local-data/sync', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`✅ Successfully synced ${data.synced_count} / ${data.total_attempted} datasets to local disk!`);
+        loadLocalStorageStatus();
+      } else {
+        showToast(`⚠️ Sync failed: ${data.detail || 'Error syncing data'}`);
+      }
+    } catch (e) {
+      showToast(`❌ Sync request error: ${e.message}`);
+    } finally {
+      if (syncBtn) {
+        syncBtn.disabled = false;
+        syncBtn.innerText = '⚡ Sync All Tracked Symbols';
+      }
+    }
+  }
+
+  function openLocalStorageModal() {
+    const m = document.getElementById('local-storage-modal');
+    if (m) m.style.display = 'flex';
+    loadLocalStorageStatus();
+  }
+
+  function closeLocalStorageModal() {
+    const m = document.getElementById('local-storage-modal');
+    if (m) m.style.display = 'none';
+  }
+
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', () => {
     runRealTimeTick();
@@ -3660,6 +3748,7 @@
     loadTelegramStatus();
     loadInstagramStatus();
     loadAuditData();
+    loadLocalStorageStatus();
   });
 </script>
 
@@ -3758,6 +3847,68 @@
       <!-- Live Delivery Log Output -->
       <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Live Delivery Console</div>
       <div id="ig-log-console" style="background: #050811; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #CBD5E1; max-height: 140px; overflow-y: auto; white-space: pre-wrap;">Ready to dispatch Instagram alerts to 9100040008.</div>
+    </div>
+  </div>
+
+  <!-- Local Market Data Persistence & Storage Manager Modal -->
+  <div class="modal-backdrop" id="local-storage-modal" onclick="if(event.target === this) closeLocalStorageModal()">
+    <div class="modal-box" style="max-width: 650px;">
+      <button class="modal-close" onclick="closeLocalStorageModal()">✕</button>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+        <span style="font-size: 24px;">💾</span>
+        <div>
+          <h2 style="font-size: 16px; font-weight: 800; color: white;">Local Market Data Persistence Engine</h2>
+          <p style="font-size: 11px; color: var(--text-muted);">Multi-timeframe historical candle storage, live tick streams, and sub-millisecond local replay</p>
+        </div>
+      </div>
+
+      <!-- Storage Metrics Cards -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px;">
+        <div style="background: #080D1A; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px; text-align: center;">
+          <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Datasets / Files</div>
+          <div id="local-store-total-files" style="font-size: 18px; font-weight: 900; color: #38BDF8; font-family: 'JetBrains Mono'; margin-top: 2px;">--</div>
+        </div>
+        <div style="background: #080D1A; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px; text-align: center;">
+          <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Total Candles</div>
+          <div id="local-store-total-candles" style="font-size: 18px; font-weight: 900; color: #34D399; font-family: 'JetBrains Mono'; margin-top: 2px;">--</div>
+        </div>
+        <div style="background: #080D1A; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px; text-align: center;">
+          <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Disk Usage</div>
+          <div id="local-store-disk-mb" style="font-size: 18px; font-weight: 900; color: #FBBF24; font-family: 'JetBrains Mono'; margin-top: 2px;">--</div>
+        </div>
+        <div style="background: #080D1A; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px; text-align: center;">
+          <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Tick Streams</div>
+          <div id="local-store-tick-files" style="font-size: 18px; font-weight: 900; color: #A78BFA; font-family: 'JetBrains Mono'; margin-top: 2px;">--</div>
+        </div>
+      </div>
+
+      <!-- Action Controller -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
+        <button id="local-sync-btn" class="btn btn-green" style="flex: 1; justify-content: center; padding: 9px; font-weight: 700;" onclick="syncLocalMarketData()">
+          ⚡ Sync All Tracked Symbols (15m, 1d, 1wk)
+        </button>
+        <button class="btn" style="padding: 9px 14px;" onclick="loadLocalStorageStatus()">
+          🔄 Refresh Status
+        </button>
+      </div>
+
+      <!-- Stored Datasets Table -->
+      <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Stored Multi-Timeframe Datasets</div>
+      <div style="background: #080D1A; border: 1px solid var(--border-subtle); border-radius: 8px; max-height: 220px; overflow-y: auto;">
+        <table class="table" style="margin: 0;">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Interval</th>
+              <th>Candles</th>
+              <th>Size</th>
+            </tr>
+          </thead>
+          <tbody id="local-store-datasets-tbody">
+            <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 12px;">Loading stored datasets...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 

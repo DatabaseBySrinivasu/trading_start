@@ -58,6 +58,13 @@ venv.bak/
 logs/
 *.log
 *.jsonl
+data/historical/*
+data/live/*
+data/snapshots/*
+!data/historical/.gitkeep
+!data/live/.gitkeep
+!data/snapshots/.gitkeep
+!data/.gitkeep
 
 # IDE / Editor files
 .claude/

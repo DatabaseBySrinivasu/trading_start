@@ -7,6 +7,7 @@ from app.services.news_service import news_service
 from app.services.pattern_service import pattern_service
 from app.services.volatility_service import volatility_service
 from app.services.angel_service import angel_client
+from app.services.local_data_service import local_data_service
 
 router = APIRouter()
 
@@ -393,4 +394,65 @@ def connect_angel():
         return {"status": "success", "message": "Angel One connected successfully", "data": res}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/local-data/status", summary="Local market data storage & persistence status")
+def get_local_storage_status():
+    """
+    Returns statistics on all locally stored historical candle datasets,
+    live tick streams, and market snapshots.
+    """
+    return local_data_service.get_storage_status()
+
+
+@router.post("/local-data/sync", summary="Synchronize all tracked symbols to local disk")
+def sync_all_symbols_to_local(force_refresh: bool = Query(False, description="Force re-fetch from network")):
+    """
+    Downloads and merges multi-timeframe candles (15m, 1d, 1wk) for all tracked
+    Indices, MCX Commodities, and Watchlist Equities directly to local storage.
+    """
+    return local_data_service.sync_all_tracked_symbols(market_data_service, force_refresh=force_refresh)
+
+
+@router.get("/local-data/candles/{symbol}", summary="Load stored historical candles from local disk")
+def get_local_candles(
+    symbol: str,
+    interval: str = Query("15m", description="Candle interval (15m, 1d, 1wk)"),
+):
+    """Retrieves locally persisted OHLCV candles with zero network latency."""
+    canon = market_data_service.normalize_symbol(symbol)
+    df = local_data_service.load_candles(canon, interval)
+    if df is None or df.empty:
+        # Fallback to market_data_service to fetch, merge, and save
+        df = market_data_service.get_historical_candles(canon, period="1mo", interval=interval)
+        if df is None or df.empty:
+            raise HTTPException(status_code=404, detail=f"No local or remote candle data found for {symbol}")
+
+    records = []
+    for idx, row in df.tail(100).iterrows():
+        records.append({
+            "timestamp": str(idx),
+            "open": round(float(row["open"]), 2),
+            "high": round(float(row["high"]), 2),
+            "low": round(float(row["low"]), 2),
+            "close": round(float(row["close"]), 2),
+            "volume": int(row.get("volume", 0)),
+        })
+    return {
+        "symbol": canon,
+        "interval": interval,
+        "total_candles": len(df),
+        "recent_candles": records,
+    }
+
+
+@router.get("/local-data/snapshots/latest", summary="Get latest locally persisted market snapshot")
+def get_latest_local_snapshot():
+    """Loads latest saved market snapshot from local disk."""
+    snap = local_data_service.load_latest_snapshot()
+    if not snap:
+        # Generate and save fresh snapshot
+        return market_data_service.get_live_dashboard_snapshot()
+    return snap
+
 
