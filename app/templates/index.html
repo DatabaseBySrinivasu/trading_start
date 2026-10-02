@@ -295,6 +295,90 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
+    /* International Indices & Macro Cues Cockpit */
+    .intl-cockpit-container {
+      background: linear-gradient(135deg, #0B1120 0%, #060A12 100%);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+    }
+
+    .intl-cockpit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .intl-cockpit-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #38BDF8;
+      letter-spacing: 0.5px;
+    }
+
+    .intl-cockpit-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .intl-col-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    .intl-col-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: #94A3B8;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+      padding-bottom: 4px;
+    }
+
+    .intl-ticker-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      padding: 3px 0;
+      border-bottom: 1px dashed rgba(51, 65, 85, 0.3);
+    }
+    .intl-ticker-item:last-child {
+      border-bottom: none;
+    }
+
+    .intl-sector-impact-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-top: 10px;
+    }
+
+    .sector-badge-item {
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
     /* AI News Sentiment & Strategy Suggestion Banner */
     .news-intel-banner {
       background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.8));
@@ -1188,7 +1272,7 @@
     <!-- GIFT NIFTY & Global Cues Widget -->
     <div class="gift-cockpit-card">
       <div class="cockpit-title">
-        <span>🌏 GIFT NIFTY & REAL-TIME OPENING GAP PROJECTION</span>
+        <span>🌏 GIFT NIFTY & OPENING GAP PROJECTION</span>
         <span class="cockpit-badge" id="gift-bias-badge" style="background: rgba(56, 189, 248, 0.2); color: #38BDF8;">CALCULATING...</span>
       </div>
       <div class="cockpit-val-row">
@@ -1201,6 +1285,87 @@
         <span id="gift-strategy-tip">Aggregating global market cues...</span>
       </div>
       <div class="global-cues-pills" id="global-cues-pills-box"></div>
+    </div>
+  </div>
+
+  <!-- International Indices & Macro Cues Cockpit -->
+  <div class="intl-cockpit-container" id="intl-cockpit-section">
+    <div class="intl-cockpit-header">
+      <div class="intl-cockpit-title">
+        <span>🌐 INTERNATIONAL INDICES & MACRO DRIVERS COCKPIT</span>
+        <span class="cockpit-badge" id="intl-sentiment-badge" style="background: rgba(56, 189, 248, 0.2); color: #38BDF8;">GLOBAL SENTIMENT: ANALYZING</span>
+      </div>
+      <div style="font-size: 11px; font-family: 'JetBrains Mono', monospace; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <span id="intl-source-tag" style="color: #94A3B8;">GIFT Source: Multi-Factor Synthesis Engine</span>
+        <span id="fii-flow-badge" class="cockpit-badge" style="background: rgba(16, 185, 129, 0.15); color: #34D399;">FII FLOW: NEUTRAL</span>
+      </div>
+    </div>
+
+    <!-- 4 Regional Columns -->
+    <div class="intl-cockpit-grid">
+      <!-- 1. US Markets & Futures (45%) -->
+      <div class="intl-col-card">
+        <div class="intl-col-title">
+          <span>🇺🇸 US Markets & Futures (45%)</span>
+          <span id="us-avg-tag" class="num-mono" style="font-size: 10px;">--</span>
+        </div>
+        <div id="us-tickers-list">
+          <div style="color: var(--text-muted); font-size: 11px;">Loading US benchmarks...</div>
+        </div>
+      </div>
+
+      <!-- 2. Asian Morning Cues (30%) -->
+      <div class="intl-col-card">
+        <div class="intl-col-title">
+          <span>🇯🇵 Asian Cues (30%)</span>
+          <span id="asia-avg-tag" class="num-mono" style="font-size: 10px;">--</span>
+        </div>
+        <div id="asia-tickers-list">
+          <div style="color: var(--text-muted); font-size: 11px;">Loading Asian markets...</div>
+        </div>
+      </div>
+
+      <!-- 3. European Afternoon Cues (15%) -->
+      <div class="intl-col-card">
+        <div class="intl-col-title">
+          <span>🇪🇺 European Markets (15%)</span>
+          <span id="euro-avg-tag" class="num-mono" style="font-size: 10px;">--</span>
+        </div>
+        <div id="euro-tickers-list">
+          <div style="color: var(--text-muted); font-size: 11px;">Loading European indices...</div>
+        </div>
+      </div>
+
+      <!-- 4. Macro Commodities & India Proxies (10%) -->
+      <div class="intl-col-card">
+        <div class="intl-col-title">
+          <span>🛢️ Macro & India Proxies (10%)</span>
+          <span id="macro-avg-tag" class="num-mono" style="font-size: 10px;">--</span>
+        </div>
+        <div id="macro-tickers-list">
+          <div style="color: var(--text-muted); font-size: 11px;">Loading Macro indicators...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sector Impact & FII Flow Forecast -->
+    <div class="intl-sector-impact-row">
+      <div class="sector-badge-item">
+        <span style="color: #94A3B8; font-weight: 700;">💻 IT SECTOR (TCS, INFY):</span>
+        <span id="sector-it-impact" style="color: #E2E8F0;">Evaluating Nasdaq & NQ Futures...</span>
+      </div>
+      <div class="sector-badge-item">
+        <span style="color: #94A3B8; font-weight: 700;">🏦 BANK NIFTY (HDFC, ICICI, SBI):</span>
+        <span id="sector-bank-impact" style="color: #E2E8F0;">Evaluating US 10Y Yields & DXY...</span>
+      </div>
+      <div class="sector-badge-item">
+        <span style="color: #94A3B8; font-weight: 700;">🚗 AUTO & ENERGY (Crude Sensitive):</span>
+        <span id="sector-auto-impact" style="color: #E2E8F0;">Evaluating Brent Crude Oil...</span>
+      </div>
+      <div class="sector-badge-item">
+        <span style="color: #94A3B8; font-weight: 700;">⚡ FII LIQUIDITY OUTLOOK:</span>
+        <span id="fii-flow-desc" style="color: #34D399;">Balanced liquidity environment.</span>
+      </div>
     </div>
   </div>
 
@@ -2142,6 +2307,134 @@
           `;
         }).join('');
       }
+
+      // Render Comprehensive International Cockpit
+      renderInternationalCockpit(giftData);
+    }
+  }
+
+  function renderInternationalCockpit(giftData) {
+    if (!giftData) return;
+
+    // 1. Source & Sentiment Badges
+    const srcTag = document.getElementById('intl-source-tag');
+    if (srcTag && giftData.selected_source) {
+      srcTag.innerText = `GIFT Source: ${giftData.selected_source}`;
+    }
+
+    const intl = giftData.international_cockpit;
+    if (!intl) return;
+
+    const sentBadge = document.getElementById('intl-sentiment-badge');
+    if (sentBadge && intl.sentiment_label) {
+      sentBadge.innerText = `SENTIMENT: ${intl.sentiment_label.toUpperCase()}`;
+      if (intl.sentiment_score >= 20) {
+        sentBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+        sentBadge.style.color = '#34D399';
+      } else if (intl.sentiment_score <= -20) {
+        sentBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+        sentBadge.style.color = '#F87171';
+      } else {
+        sentBadge.style.background = 'rgba(56, 189, 248, 0.2)';
+        sentBadge.style.color = '#38BDF8';
+      }
+    }
+
+    const fiiBadge = document.getElementById('fii-flow-badge');
+    const fiiDesc = document.getElementById('fii-flow-desc');
+    if (fiiBadge && intl.fii_flow_bias) {
+      fiiBadge.innerText = `FII BIAS: ${intl.fii_flow_bias.replace(/_/g, ' ')}`;
+      if (intl.fii_flow_bias.includes('INFLOW')) {
+        fiiBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+        fiiBadge.style.color = '#34D399';
+      } else if (intl.fii_flow_bias.includes('OUTFLOW')) {
+        fiiBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+        fiiBadge.style.color = '#F87171';
+      } else {
+        fiiBadge.style.background = 'rgba(148, 163, 184, 0.2)';
+        fiiBadge.style.color = '#CBD5E1';
+      }
+    }
+    if (fiiDesc && intl.fii_description) {
+      fiiDesc.innerText = intl.fii_description;
+    }
+
+    // Regional averages
+    const regAvg = intl.regional_averages || {};
+    const usAvgTag = document.getElementById('us-avg-tag');
+    if (usAvgTag) {
+      const uVal = regAvg.us_markets_pct || 0;
+      usAvgTag.innerText = `Avg: ${uVal >= 0 ? '+' : ''}${uVal.toFixed(2)}%`;
+      usAvgTag.className = uVal >= 0 ? 'num-mono positive' : 'num-mono negative';
+    }
+
+    const asiaAvgTag = document.getElementById('asia-avg-tag');
+    if (asiaAvgTag) {
+      const aVal = regAvg.asian_markets_pct || 0;
+      asiaAvgTag.innerText = `Avg: ${aVal >= 0 ? '+' : ''}${aVal.toFixed(2)}%`;
+      asiaAvgTag.className = aVal >= 0 ? 'num-mono positive' : 'num-mono negative';
+    }
+
+    const euroAvgTag = document.getElementById('euro-avg-tag');
+    if (euroAvgTag) {
+      const eVal = regAvg.european_markets_pct || 0;
+      euroAvgTag.innerText = `Avg: ${eVal >= 0 ? '+' : ''}${eVal.toFixed(2)}%`;
+      euroAvgTag.className = eVal >= 0 ? 'num-mono positive' : 'num-mono negative';
+    }
+
+    const macroAvgTag = document.getElementById('macro-avg-tag');
+    if (macroAvgTag) {
+      const mVal = regAvg.macro_commodities_pct || 0;
+      macroAvgTag.innerText = `Avg: ${mVal >= 0 ? '+' : ''}${mVal.toFixed(2)}%`;
+      macroAvgTag.className = mVal >= 0 ? 'num-mono positive' : 'num-mono negative';
+    }
+
+    // Helper to render ticker list in a column
+    function renderTickerList(containerId, items) {
+      const el = document.getElementById(containerId);
+      if (!el || !items || items.length === 0) return;
+      el.innerHTML = items.map(t => {
+        const isUp = (t.change_percent || 0) >= 0;
+        return `
+          <div class="intl-ticker-item">
+            <span style="color: #CBD5E1; font-weight: 600;" title="${t.name}">${t.name.length > 20 ? t.name.slice(0, 20) + '…' : t.name}</span>
+            <div style="display: flex; gap: 8px; align-items: baseline;">
+              <span class="num-mono" style="font-size: 11px; color: #94A3B8;">${t.price ? Number(t.price).toLocaleString('en-US', {minimumFractionDigits: (t.price < 20 ? 2 : 1), maximumFractionDigits: 2}) : '--'}</span>
+              <span class="num-mono ${isUp ? 'positive' : 'negative'}" style="font-size: 11px; font-weight: 700;">
+                ${isUp ? '+' : ''}${(t.change_percent || 0).toFixed(2)}%
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    renderTickerList('us-tickers-list', intl.us_markets);
+    renderTickerList('asia-tickers-list', intl.asian_markets);
+    renderTickerList('euro-tickers-list', intl.european_markets);
+    renderTickerList('macro-tickers-list', (intl.macro_commodities || []).concat(intl.offshore_india_etfs || []));
+
+    // Sector Impacts
+    const sectors = intl.sector_impacts || {};
+    const itEl = document.getElementById('sector-it-impact');
+    if (itEl && sectors.it_sector) {
+      const it = sectors.it_sector;
+      const isBull = it.bias === 'BULLISH';
+      itEl.innerHTML = `<b style="color: ${isBull ? '#34D399' : (it.bias === 'BEARISH' ? '#F87171' : '#CBD5E1')}">${it.bias}</b> • ${it.driver}`;
+    }
+
+    const bankEl = document.getElementById('sector-bank-impact');
+    if (bankEl && sectors.banking_sector) {
+      const bk = sectors.banking_sector;
+      const isBull = bk.bias === 'BULLISH';
+      bankEl.innerHTML = `<b style="color: ${isBull ? '#34D399' : (bk.bias === 'BEARISH' ? '#F87171' : '#CBD5E1')}">${bk.bias}</b> • ${bk.driver}`;
+    }
+
+    const autoEl = document.getElementById('sector-auto-impact');
+    if (autoEl && sectors.auto_and_energy) {
+      const au = sectors.auto_and_energy;
+      const isBull = au.bias === 'BULLISH';
+      autoEl.innerHTML = `<b style="color: ${isBull ? '#34D399' : (au.bias === 'BEARISH' ? '#F87171' : '#CBD5E1')}">${au.bias}</b> • ${au.driver}`;
     }
   }
 

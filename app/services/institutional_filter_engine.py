@@ -793,16 +793,19 @@ class InstitutionalFilterEngine:
             "description": regime_info["description"],
         }
 
-        # 10. Global Market Sentiment
+        # 10. Global Market Sentiment (VIX, Multi-Source GIFT NIFTY, International Cockpit)
         gift_nifty_pts = vix_data.get("gift_nifty", {}).get("gap_points", 0.0)
         global_bias = vix_data.get("gift_nifty", {}).get("bias", "FLAT_NEUTRAL")
+        global_sent_score = vix_data.get("gift_nifty", {}).get("global_sentiment_score", 0.0)
+        fii_bias = vix_data.get("gift_nifty", {}).get("fii_flow_bias", "BALANCED_NEUTRAL")
         f_sentiment = {
-            "name": "Global Sentiment (VIX & GIFT)",
+            "name": "Global Sentiment (VIX, GIFT & Macro)",
             "passed": True,
-            "status": "PASS" if abs(gift_nifty_pts) >= 15.0 or vix_val < 18.0 else "WATCH",
-            "value": f"VIX: {vix_val:.1f} | GIFT: {gift_nifty_pts:+0.1f} pts",
+            "status": "PASS" if abs(gift_nifty_pts) >= 15.0 or vix_val < 18.0 or abs(global_sent_score) >= 15.0 else "WATCH",
+            "value": f"VIX: {vix_val:.1f} | GIFT: {gift_nifty_pts:+0.1f} pts | Sent: {global_sent_score:+.0f}",
             "bias": global_bias,
-            "description": f"India VIX at {vix_val:.2f} ({vix_data.get('india_vix', {}).get('regime', 'IDEAL')}). GIFT NIFTY bias: {global_bias}.",
+            "fii_flow_bias": fii_bias,
+            "description": f"India VIX at {vix_val:.2f} ({vix_data.get('india_vix', {}).get('regime', 'IDEAL')}). GIFT NIFTY bias: {global_bias} | FII Bias: {fii_bias}.",
         }
 
         # 11. Chop Markets (Choppiness Index Gate)

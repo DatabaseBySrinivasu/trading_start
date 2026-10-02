@@ -164,14 +164,30 @@ DEFAULT_BASELINES: Dict[str, Dict[str, Any]] = {
     "COPPER": {"price": 840.0, "previous_close": 835.0, "change": 5.0, "change_percent": 0.60, "currency": "INR", "unit": "₹/kg", "name": "Copper (MCX)"},
     "HG=F": {"price": 840.0, "previous_close": 835.0, "change": 5.0, "change_percent": 0.60, "currency": "INR", "unit": "₹/kg", "name": "Copper (MCX)"},
 
-    # Global / Offshore indicators
+    # Global / Offshore indicators & International Indices
     "INDA": {"price": 48.30, "previous_close": 48.15, "change": 0.15, "change_percent": 0.31, "currency": "USD", "name": "iShares MSCI India ETF"},
     "EPI": {"price": 42.00, "previous_close": 41.88, "change": 0.12, "change_percent": 0.29, "currency": "USD", "name": "WisdomTree India Earnings"},
+    "INDY": {"price": 46.50, "previous_close": 46.35, "change": 0.15, "change_percent": 0.32, "currency": "USD", "name": "iShares India 50 ETF"},
     "^GSPC": {"price": 5650.0, "previous_close": 5630.0, "change": 20.0, "change_percent": 0.36, "currency": "USD", "name": "S&P 500"},
     "^IXIC": {"price": 17800.0, "previous_close": 17720.0, "change": 80.0, "change_percent": 0.45, "currency": "USD", "name": "NASDAQ Composite"},
-    "^N225": {"price": 38200.0, "previous_close": 38050.0, "change": 150.0, "change_percent": 0.39, "currency": "JPY", "name": "Nikkei 225"},
-    "^HSI": {"price": 18100.0, "previous_close": 18020.0, "change": 80.0, "change_percent": 0.44, "currency": "HKD", "name": "Hang Seng"},
-    "USDINR=X": {"price": 86.50, "previous_close": 86.45, "change": 0.05, "change_percent": 0.06, "currency": "INR", "name": "USD/INR"},
+    "^NDX": {"price": 19650.0, "previous_close": 19560.0, "change": 90.0, "change_percent": 0.46, "currency": "USD", "name": "NASDAQ 100"},
+    "^DJI": {"price": 41500.0, "previous_close": 41400.0, "change": 100.0, "change_percent": 0.24, "currency": "USD", "name": "Dow Jones Industrial"},
+    "ES=F": {"price": 5665.0, "previous_close": 5645.0, "change": 20.0, "change_percent": 0.35, "currency": "USD", "name": "S&P 500 E-mini Futures"},
+    "NQ=F": {"price": 19700.0, "previous_close": 19610.0, "change": 90.0, "change_percent": 0.46, "currency": "USD", "name": "Nasdaq 100 E-mini Futures"},
+    "YM=F": {"price": 41550.0, "previous_close": 41450.0, "change": 100.0, "change_percent": 0.24, "currency": "USD", "name": "Dow Futures"},
+    "^TNX": {"price": 4.15, "previous_close": 4.18, "change": -0.03, "change_percent": -0.72, "currency": "USD", "name": "US 10-Yr Treasury Yield"},
+    "DX-Y.NYB": {"price": 101.80, "previous_close": 101.95, "change": -0.15, "change_percent": -0.15, "currency": "USD", "name": "US Dollar Index (DXY)"},
+    "DXY": {"price": 101.80, "previous_close": 101.95, "change": -0.15, "change_percent": -0.15, "currency": "USD", "name": "US Dollar Index (DXY)"},
+    "^N225": {"price": 38200.0, "previous_close": 38050.0, "change": 150.0, "change_percent": 0.39, "currency": "JPY", "name": "Nikkei 225 (Japan)"},
+    "^HSI": {"price": 18100.0, "previous_close": 18020.0, "change": 80.0, "change_percent": 0.44, "currency": "HKD", "name": "Hang Seng (Hong Kong)"},
+    "^TWII": {"price": 22350.0, "previous_close": 22250.0, "change": 100.0, "change_percent": 0.45, "currency": "TWD", "name": "Taiwan TAIEX"},
+    "^KS11": {"price": 2680.0, "previous_close": 2668.0, "change": 12.0, "change_percent": 0.45, "currency": "KRW", "name": "KOSPI (South Korea)"},
+    "000001.SS": {"price": 2850.0, "previous_close": 2840.0, "change": 10.0, "change_percent": 0.35, "currency": "CNY", "name": "Shanghai Composite"},
+    "^FTSE": {"price": 8250.0, "previous_close": 8230.0, "change": 20.0, "change_percent": 0.24, "currency": "GBP", "name": "FTSE 100 (UK)"},
+    "^GDAXI": {"price": 18600.0, "previous_close": 18550.0, "change": 50.0, "change_percent": 0.27, "currency": "EUR", "name": "DAX 40 (Germany)"},
+    "^FCHI": {"price": 7550.0, "previous_close": 7530.0, "change": 20.0, "change_percent": 0.27, "currency": "EUR", "name": "CAC 40 (France)"},
+    "USDINR=X": {"price": 86.50, "previous_close": 86.45, "change": 0.05, "change_percent": 0.06, "currency": "INR", "name": "USD/INR Currency"},
+    "GIFT_NIFTY": {"price": 23415.0, "previous_close": 23370.0, "change": 45.0, "change_percent": 0.19, "currency": "INR", "name": "GIFT NIFTY (NSE IX)"},
 }
 
 
@@ -249,7 +265,10 @@ class MarketDataService:
                 tracked_symbols = [
                     "^NSEI", "^BSESN", "^NSEBANK", "NIFTY_FIN_SERVICE.NS", "^NSEMDCP50",
                     "SBIN", "RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK", "LT", "ITC",
-                    "CRUDEOIL", "GOLD", "SILVER", "NATURALGAS", "COPPER", "^INDIAVIX"
+                    "CRUDEOIL", "GOLD", "SILVER", "NATURALGAS", "COPPER", "^INDIAVIX",
+                    "GIFT_NIFTY", "INDA", "EPI", "INDY", "^GSPC", "^IXIC", "^NDX", "^DJI",
+                    "ES=F", "NQ=F", "YM=F", "^TNX", "DX-Y.NYB", "DXY", "^N225", "^HSI",
+                    "^TWII", "^KS11", "000001.SS", "^FTSE", "^GDAXI", "^FCHI", "USDINR=X"
                 ]
                 for sym in tracked_symbols:
                     canon = self.normalize_symbol(sym)

@@ -292,6 +292,22 @@ def get_gift_nifty():
     return volatility_service.get_gift_nifty_and_global_cues()
 
 
+@router.get("/giftnifty/multi-source", summary="Multi-source GIFT NIFTY comparing Direct Feed vs Econometric Synthesis")
+def get_gift_nifty_multi_source():
+    """Returns detailed comparison of Direct NSE IX Ticker vs Econometric Multi-Factor Synthesis Engine."""
+    return volatility_service.get_gift_nifty_multi_source()
+
+
+@router.get("/international-cockpit", summary="Comprehensive International Indices & Macro Cues Cockpit")
+def get_international_cockpit():
+    """
+    Returns classified global market benchmarks across US Markets & Futures (45%),
+    Asian Morning Cues (30%), European Session (15%), and Macro Commodities & Currencies (10%)
+    with Sector Impact Analysis and FII Institutional Flow Predictions.
+    """
+    return volatility_service.get_international_indices_cockpit()
+
+
 @router.get("/session-status", summary="Get Indian market hours and active session status")
 def get_market_session_status(symbol: Optional[str] = Query("^NSEI", description="Symbol to query (e.g. ^NSEI, CRUDEOIL)")):
     """Returns real-time session open/close status in Indian Standard Time (IST)."""
