@@ -194,6 +194,13 @@ class PatternService:
         s1 = (2.0 * pivot) - pdh
         r2 = pivot + (pdh - pdl)
         s2 = pivot - (pdh - pdl)
+        r3 = pdh + 2.0 * (pivot - pdl)
+        s3 = pdl - 2.0 * (pdh - pivot)
+        r4 = r3 + (pdh - pdl)
+        s4 = s3 - (pdh - pdl)
+
+        # Camarilla Pivots (H1-H5, L1-L5)
+        cam = cls.calculate_camarilla_pivots(pdh, pdl, pdc, cur_price)
 
         # Breakout status
         if cur_price > pdh and pdh > 0:
@@ -234,12 +241,29 @@ class PatternService:
                 "expectation": cpr_expectation,
             },
             "pivots": {
+                "r4": round(r4, 2),
+                "r3": round(r3, 2),
                 "r2": round(r2, 2),
                 "r1": round(r1, 2),
                 "pivot": round(pivot, 2),
                 "s1": round(s1, 2),
                 "s2": round(s2, 2),
+                "s3": round(s3, 2),
+                "s4": round(s4, 2),
             },
+            "classical_pivots": {
+                "r4": round(r4, 2),
+                "r3": round(r3, 2),
+                "r2": round(r2, 2),
+                "r1": round(r1, 2),
+                "pivot": round(pivot, 2),
+                "s1": round(s1, 2),
+                "s2": round(s2, 2),
+                "s3": round(s3, 2),
+                "s4": round(s4, 2),
+            },
+            "camarilla": cam,
+            "camarilla_pivots": cam,
             "status": status,
             "bias": bias,
             "description": reason,
@@ -819,9 +843,565 @@ class PatternService:
             "description": regime_desc,
         }
 
-    def run_full_pattern_scan(self, df: pd.DataFrame) -> Dict[str, Any]:
+    @classmethod
+    def calculate_camarilla_pivots(
+        cls, high: float, low: float, close: float, cur_price: float = 0.0
+    ) -> Dict[str, Any]:
         """
-        Executes unified scan for Candlesticks, Day Levels & CPR, Volumes/VWAP, SMC Order Blocks, W/M Patterns, and Price Action Momentum.
+        Calculates Camarilla Pivot Points (H1-H5, L1-L5).
+        Key Trading Zones:
+        - H4: Institutional Long Breakout Target / Expansion
+        - H3: Range High Resistance / Short Reversal Zone
+        - L3: Range Low Support / Long Bounce Zone
+        - L4: Institutional Short Breakdown Target / Expansion
+        - H5 / L5: Ultimate Extension / Exhaustion Targets
+        """
+        high = cls._clean_float(high)
+        low = cls._clean_float(low)
+        close = cls._clean_float(close)
+        rng = max(0.001, high - low)
+        cur_p = cls._clean_float(cur_price, close)
+
+        h5 = (high / (low + 1e-9)) * close if low > 0 else close + (rng * 1.1)
+        h4 = close + (rng * 0.55)
+        h3 = close + (rng * 0.275)
+        h2 = close + (rng * 0.1833)
+        h1 = close + (rng * 0.0916)
+
+        l1 = close - (rng * 0.0916)
+        l2 = close - (rng * 0.1833)
+        l3 = close - (rng * 0.275)
+        l4 = close - (rng * 0.55)
+        l5 = close - (h5 - close)
+
+        # Status & Actionable Bias
+        if cur_p >= h4:
+            cam_status = "BULLISH_H4_BREAKOUT"
+            cam_bias = "STRONG_BULLISH"
+            cam_desc = f"Price (₹{cur_p:.2f}) broke above Camarilla H4 (₹{h4:.2f}) - Expansion towards H5 (₹{h5:.2f})"
+        elif cur_p >= h3:
+            cam_status = "TESTING_H3_RESISTANCE"
+            cam_bias = "RESISTANCE_CAUTION"
+            cam_desc = f"Price (₹{cur_p:.2f}) testing Camarilla H3 Resistance (₹{h3:.2f}) - Watch for reversal or breakout to H4 (₹{h4:.2f})"
+        elif cur_p <= l4:
+            cam_status = "BEARISH_L4_BREAKDOWN"
+            cam_bias = "STRONG_BEARISH"
+            cam_desc = f"Price (₹{cur_p:.2f}) broke below Camarilla L4 (₹{l4:.2f}) - Expansion towards L5 (₹{l5:.2f})"
+        elif cur_p <= l3:
+            cam_status = "TESTING_L3_SUPPORT"
+            cam_bias = "SUPPORT_BOUNCE"
+            cam_desc = f"Price (₹{cur_p:.2f}) testing Camarilla L3 Support (₹{l3:.2f}) - Watch for bounce or breakdown to L4 (₹{l4:.2f})"
+        else:
+            cam_status = "INSIDE_CAMARILLA_RANGE"
+            cam_bias = "NEUTRAL_RANGE"
+            cam_desc = f"Price (₹{cur_p:.2f}) oscillating between Camarilla L3 (₹{l3:.2f}) Support and H3 (₹{h3:.2f}) Resistance"
+
+        return {
+            "h5": round(h5, 2),
+            "h4": round(h4, 2),
+            "h3": round(h3, 2),
+            "h2": round(h2, 2),
+            "h1": round(h1, 2),
+            "l1": round(l1, 2),
+            "l2": round(l2, 2),
+            "l3": round(l3, 2),
+            "l4": round(l4, 2),
+            "l5": round(l5, 2),
+            "status": cam_status,
+            "bias": cam_bias,
+            "description": cam_desc,
+        }
+
+    @classmethod
+    def calculate_swing_clusters(
+        cls, df: pd.DataFrame, lookback: int = 60, cluster_tolerance_pct: float = 0.25
+    ) -> Dict[str, Any]:
+        """
+        Identifies structural swing high (supply) and swing low (demand) fractal clusters.
+        Groups nearby peaks and troughs within cluster_tolerance_pct to establish strong horizontal barriers.
+        """
+        df = cls._clean_df(df)
+        if df is None or len(df) < 5:
+            return {"supply_clusters": [], "demand_clusters": [], "total_clusters": 0}
+
+        window = df.tail(lookback).copy().reset_index(drop=True)
+        highs = window["high"].values
+        lows = window["low"].values
+        n = len(window)
+
+        raw_peaks = []
+        raw_troughs = []
+
+        for i in range(2, n - 2):
+            if highs[i] >= highs[i - 1] and highs[i] >= highs[i - 2] and highs[i] >= highs[i + 1] and highs[i] >= highs[i + 2]:
+                raw_peaks.append(float(highs[i]))
+            if lows[i] <= lows[i - 1] and lows[i] <= lows[i - 2] and lows[i] <= lows[i + 1] and lows[i] <= lows[i + 2]:
+                raw_troughs.append(float(lows[i]))
+
+        supply_clusters: List[Dict[str, Any]] = []
+        for p in sorted(raw_peaks, reverse=True):
+            matched = False
+            for c in supply_clusters:
+                avg_p = c["price"]
+                if abs(p - avg_p) / (avg_p + 1e-9) <= (cluster_tolerance_pct / 100.0):
+                    c["touches"] += 1
+                    c["price"] = round((c["price"] * (c["touches"] - 1) + p) / c["touches"], 2)
+                    c["min_price"] = min(c["min_price"], p)
+                    c["max_price"] = max(c["max_price"], p)
+                    matched = True
+                    break
+            if not matched:
+                supply_clusters.append({
+                    "price": round(p, 2),
+                    "min_price": round(p, 2),
+                    "max_price": round(p, 2),
+                    "touches": 1,
+                    "type": "SUPPLY_RESISTANCE_ZONE",
+                    "strength": "MODERATE",
+                })
+
+        demand_clusters: List[Dict[str, Any]] = []
+        for t in sorted(raw_troughs):
+            matched = False
+            for c in demand_clusters:
+                avg_t = c["price"]
+                if abs(t - avg_t) / (avg_t + 1e-9) <= (cluster_tolerance_pct / 100.0):
+                    c["touches"] += 1
+                    c["price"] = round((c["price"] * (c["touches"] - 1) + t) / c["touches"], 2)
+                    c["min_price"] = min(c["min_price"], t)
+                    c["max_price"] = max(c["max_price"], t)
+                    matched = True
+                    break
+            if not matched:
+                demand_clusters.append({
+                    "price": round(t, 2),
+                    "min_price": round(t, 2),
+                    "max_price": round(t, 2),
+                    "touches": 1,
+                    "type": "DEMAND_SUPPORT_ZONE",
+                    "strength": "MODERATE",
+                })
+
+        for sc in supply_clusters:
+            sc["strength"] = "VERY_STRONG" if sc["touches"] >= 3 else ("STRONG" if sc["touches"] == 2 else "MODERATE")
+        for dc in demand_clusters:
+            dc["strength"] = "VERY_STRONG" if dc["touches"] >= 3 else ("STRONG" if dc["touches"] == 2 else "MODERATE")
+
+        return {
+            "supply_clusters": sorted(supply_clusters, key=lambda x: x["price"], reverse=True),
+            "demand_clusters": sorted(demand_clusters, key=lambda x: x["price"]),
+            "total_clusters": len(supply_clusters) + len(demand_clusters),
+        }
+
+    @classmethod
+    def calculate_macro_fibonacci(cls, df: pd.DataFrame, lookback: int = 60) -> Dict[str, Any]:
+        """
+        Calculates Macro Multi-Day Fibonacci Retracements & Extensions.
+        Levels: 0.0%, 23.6%, 38.2%, 50.0%, 61.8% (Golden Pocket), 78.6%, 100.0%, 161.8% Golden Extension.
+        """
+        df = cls._clean_df(df)
+        if df is None or len(df) < 5:
+            return {"levels": {}, "nearest_support": 0.0, "nearest_resistance": 0.0, "status": "NO_DATA"}
+
+        window = df.tail(lookback)
+        swing_high = cls._clean_float(window["high"].max())
+        swing_low = cls._clean_float(window["low"].min())
+        cur_price = cls._clean_float(window["close"].iloc[-1])
+        diff = max(0.001, swing_high - swing_low)
+
+        fib_0 = swing_high
+        fib_236 = swing_high - (0.236 * diff)
+        fib_382 = swing_high - (0.382 * diff)
+        fib_500 = swing_high - (0.500 * diff)
+        fib_618 = swing_high - (0.618 * diff)
+        fib_786 = swing_high - (0.786 * diff)
+        fib_1000 = swing_low
+        fib_1618 = swing_high + (0.618 * diff)
+
+        levels = {
+            "fib_161.8": round(fib_1618, 2),
+            "fib_0.0": round(fib_0, 2),
+            "fib_23.6": round(fib_236, 2),
+            "fib_38.2": round(fib_382, 2),
+            "fib_50.0": round(fib_500, 2),
+            "fib_61.8": round(fib_618, 2),
+            "fib_78.6": round(fib_786, 2),
+            "fib_100.0": round(fib_1000, 2),
+        }
+
+        supports = [v for v in levels.values() if v < cur_price]
+        resistances = [v for v in levels.values() if v > cur_price]
+
+        nearest_supp = max(supports) if supports else round(cur_price * 0.98, 2)
+        nearest_res = min(resistances) if resistances else round(cur_price * 1.02, 2)
+
+        return {
+            "swing_high": round(swing_high, 2),
+            "swing_low": round(swing_low, 2),
+            "current_price": round(cur_price, 2),
+            "levels": levels,
+            "nearest_support": round(nearest_supp, 2),
+            "nearest_resistance": round(nearest_res, 2),
+            "golden_pocket_support": round(fib_618, 2),
+            "macro_range_pts": round(diff, 2),
+        }
+
+    @classmethod
+    def calculate_multi_timeframe_sr(
+        cls,
+        df_intraday: Optional[pd.DataFrame] = None,
+        df_daily: Optional[pd.DataFrame] = None,
+        df_weekly: Optional[pd.DataFrame] = None,
+        symbol: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Unified Multi-Timeframe Support & Resistance Engine.
+        Ingests Intraday, Daily, and Weekly historical data to compute:
+        1. Daily & Weekly Central Pivot Range (CPR)
+        2. Daily & Weekly Classical Pivots (R1-R4, S1-S4)
+        3. Daily & Weekly Camarilla Pivots (H1-H5, L1-L5)
+        4. Multi-Day Extremes (PDH/PDL, 2DH/2DL, 3DH/3DL, 5DH/5DL or PWH/PWL, 10DH/10DL, 20DH/20DL or PMH/PML)
+        5. Swing High/Low Supply & Demand Clusters
+        6. Macro Fibonacci Retracements & Extensions
+        7. Consolidated Resistance (R_near, R_mid, R_major) & Support (S_near, S_mid, S_major) Hierarchy
+        8. Confluence Tagging & Actionable Structural Matrix
+        """
+        from app.services.market_data import market_data_service
+
+        # 1. Fetch data if not supplied
+        if df_daily is None or df_daily.empty:
+            if symbol:
+                df_daily = market_data_service.get_historical_candles(symbol, period="3mo", interval="1d")
+            elif df_intraday is not None and not df_intraday.empty:
+                df_daily = df_intraday.copy()
+
+        if df_weekly is None or df_weekly.empty:
+            if symbol:
+                df_weekly = market_data_service.get_historical_candles(symbol, period="6mo", interval="1wk")
+            elif df_daily is not None and not df_daily.empty:
+                df_weekly = df_daily.copy()
+
+        df_intra_clean = cls._clean_df(df_intraday)
+        df_daily_clean = cls._clean_df(df_daily)
+        df_weekly_clean = cls._clean_df(df_weekly)
+
+        # Determine current spot price
+        if df_intra_clean is not None and len(df_intra_clean) > 0:
+            cur_price = cls._clean_float(df_intra_clean["close"].iloc[-1])
+        elif df_daily_clean is not None and len(df_daily_clean) > 0:
+            cur_price = cls._clean_float(df_daily_clean["close"].iloc[-1])
+        elif symbol:
+            live_quote = market_data_service.get_live_price(symbol)
+            cur_price = cls._clean_float(live_quote["price"]) if live_quote else 1000.0
+        else:
+            cur_price = 1000.0
+
+        if df_daily_clean is None or len(df_daily_clean) < 2:
+            # Fallback baseline when insufficient history
+            return {
+                "symbol": symbol or "UNKNOWN",
+                "current_price": round(cur_price, 2),
+                "nearest_resistance": {"price": round(cur_price * 1.008, 2), "distance_pts": round(cur_price * 0.008, 2), "distance_pct": 0.8, "tags": ["Estimated R1"], "strength": "MODERATE"},
+                "nearest_support": {"price": round(cur_price * 0.992, 2), "distance_pts": round(cur_price * 0.008, 2), "distance_pct": 0.8, "tags": ["Estimated S1"], "strength": "MODERATE"},
+                "r_near": round(cur_price * 1.008, 2),
+                "r_mid": round(cur_price * 1.016, 2),
+                "r_major": round(cur_price * 1.025, 2),
+                "s_near": round(cur_price * 0.992, 2),
+                "s_mid": round(cur_price * 0.984, 2),
+                "s_major": round(cur_price * 0.975, 2),
+                "daily_cpr": {"pivot": round(cur_price, 2), "tc": round(cur_price * 1.002, 2), "bc": round(cur_price * 0.998, 2), "width_pct": 0.4, "type": "AVERAGE_CPR"},
+                "weekly_cpr": {"pivot": round(cur_price, 2), "tc": round(cur_price * 1.005, 2), "bc": round(cur_price * 0.995, 2), "width_pct": 1.0, "type": "AVERAGE_CPR"},
+                "multi_day_extremes": {
+                    "pdh": round(cur_price * 1.008, 2), "pdl": round(cur_price * 0.992, 2), "pdc": round(cur_price, 2),
+                    "high_2d": round(cur_price * 1.012, 2), "low_2d": round(cur_price * 0.988, 2),
+                    "high_3d": round(cur_price * 1.015, 2), "low_3d": round(cur_price * 0.985, 2),
+                    "high_5d": round(cur_price * 1.020, 2), "low_5d": round(cur_price * 0.980, 2),
+                    "high_10d": round(cur_price * 1.030, 2), "low_10d": round(cur_price * 0.970, 2),
+                    "high_20d": round(cur_price * 1.045, 2), "low_20d": round(cur_price * 0.955, 2),
+                },
+                "resistance_hierarchy": [],
+                "support_hierarchy": [],
+                "confluence_bias": "CONSOLIDATING_BETWEEN_SR",
+                "description": f"Price (₹{cur_price:.2f}) trading within baseline support & resistance bands.",
+            }
+
+        # 2. Extract Daily Bar Levels
+        prev_day = df_daily_clean.iloc[-2] if len(df_daily_clean) >= 2 else df_daily_clean.iloc[-1]
+        pdh = cls._clean_float(prev_day["high"], cur_price)
+        pdl = cls._clean_float(prev_day["low"], cur_price)
+        pdc = cls._clean_float(prev_day["close"], cur_price)
+        pdo = cls._clean_float(prev_day["open"], cur_price)
+
+        # Multi-day high & low ranges
+        h2d = cls._clean_float(df_daily_clean["high"].tail(3).iloc[:-1].max() if len(df_daily_clean) >= 3 else pdh)
+        l2d = cls._clean_float(df_daily_clean["low"].tail(3).iloc[:-1].min() if len(df_daily_clean) >= 3 else pdl)
+        h3d = cls._clean_float(df_daily_clean["high"].tail(4).iloc[:-1].max() if len(df_daily_clean) >= 4 else h2d)
+        l3d = cls._clean_float(df_daily_clean["low"].tail(4).iloc[:-1].min() if len(df_daily_clean) >= 4 else l2d)
+        h5d = cls._clean_float(df_daily_clean["high"].tail(6).iloc[:-1].max() if len(df_daily_clean) >= 6 else h3d)
+        l5d = cls._clean_float(df_daily_clean["low"].tail(6).iloc[:-1].min() if len(df_daily_clean) >= 6 else l3d)
+        h10d = cls._clean_float(df_daily_clean["high"].tail(11).iloc[:-1].max() if len(df_daily_clean) >= 11 else h5d)
+        l10d = cls._clean_float(df_daily_clean["low"].tail(11).iloc[:-1].min() if len(df_daily_clean) >= 11 else l5d)
+        h20d = cls._clean_float(df_daily_clean["high"].tail(21).iloc[:-1].max() if len(df_daily_clean) >= 21 else h10d)
+        l20d = cls._clean_float(df_daily_clean["low"].tail(21).iloc[:-1].min() if len(df_daily_clean) >= 21 else l10d)
+
+        # 3. Daily Pivots & CPR
+        p_d = (pdh + pdl + pdc) / 3.0
+        bc_d = (pdh + pdl) / 2.0
+        tc_d = (p_d - bc_d) + p_d
+        top_cpr_d = max(tc_d, bc_d)
+        bot_cpr_d = min(tc_d, bc_d)
+        cpr_w_pct_d = round((abs(tc_d - bc_d) / (p_d + 1e-9)) * 100, 3)
+        cpr_type_d = "NARROW_CPR" if cpr_w_pct_d <= 0.25 else ("WIDE_CPR" if cpr_w_pct_d >= 0.6 else "AVERAGE_CPR")
+
+        r1_d = (2.0 * p_d) - pdl
+        s1_d = (2.0 * p_d) - pdh
+        r2_d = p_d + (pdh - pdl)
+        s2_d = p_d - (pdh - pdl)
+        r3_d = pdh + 2.0 * (p_d - pdl)
+        s3_d = pdl - 2.0 * (pdh - p_d)
+        r4_d = r3_d + (pdh - pdl)
+        s4_d = s3_d - (pdh - pdl)
+
+        cam_d = cls.calculate_camarilla_pivots(pdh, pdl, pdc, cur_price)
+
+        # 4. Weekly Pivots & CPR
+        if df_weekly_clean is not None and len(df_weekly_clean) >= 2:
+            prev_wk = df_weekly_clean.iloc[-2]
+            pwh = cls._clean_float(prev_wk["high"], pdh)
+            pwl = cls._clean_float(prev_wk["low"], pdl)
+            pwc = cls._clean_float(prev_wk["close"], pdc)
+        else:
+            pwh, pwl, pwc = h5d, l5d, pdc
+
+        p_w = (pwh + pwl + pwc) / 3.0
+        bc_w = (pwh + pwl) / 2.0
+        tc_w = (p_w - bc_w) + p_w
+        top_cpr_w = max(tc_w, bc_w)
+        bot_cpr_w = min(tc_w, bc_w)
+        cpr_w_pct_w = round((abs(tc_w - bc_w) / (p_w + 1e-9)) * 100, 3)
+        cpr_type_w = "NARROW_CPR" if cpr_w_pct_w <= 0.50 else ("WIDE_CPR" if cpr_w_pct_w >= 1.2 else "AVERAGE_CPR")
+
+        r1_w = (2.0 * p_w) - pwl
+        s1_w = (2.0 * p_w) - pwh
+        r2_w = p_w + (pwh - pwl)
+        s2_w = p_w - (pwh - pwl)
+        cam_w = cls.calculate_camarilla_pivots(pwh, pwl, pwc, cur_price)
+
+        # 5. Macro Fibonacci & Swing Fractal Clusters
+        macro_fib = cls.calculate_macro_fibonacci(df_daily_clean, lookback=45)
+        fib_levels = macro_fib.get("levels", {})
+
+        swing_clusters = cls.calculate_swing_clusters(df_daily_clean, lookback=45, cluster_tolerance_pct=0.25)
+        supply_zones = swing_clusters.get("supply_clusters", [])
+        demand_zones = swing_clusters.get("demand_clusters", [])
+
+        # 6. Raw Level Pool Aggregation
+        raw_candidates: List[Tuple[str, float]] = [
+            ("PDH (Prev Day High)", pdh),
+            ("PDL (Prev Day Low)", pdl),
+            ("PDC (Prev Day Close)", pdc),
+            ("2-Day High", h2d),
+            ("2-Day Low", l2d),
+            ("3-Day High", h3d),
+            ("3-Day Low", l3d),
+            ("5-Day / Prev Week High", pwh),
+            ("5-Day / Prev Week Low", pwl),
+            ("10-Day High", h10d),
+            ("10-Day Low", l10d),
+            ("20-Day / Prev Month High", h20d),
+            ("20-Day / Prev Month Low", l20d),
+            ("Daily Pivot (P)", p_d),
+            ("Daily R1", r1_d),
+            ("Daily R2", r2_d),
+            ("Daily R3", r3_d),
+            ("Daily R4", r4_d),
+            ("Daily S1", s1_d),
+            ("Daily S2", s2_d),
+            ("Daily S3", s3_d),
+            ("Daily S4", s4_d),
+            ("Daily CPR TC", tc_d),
+            ("Daily CPR BC", bc_d),
+            ("Daily Camarilla H3 (Short Resistance)", cam_d["h3"]),
+            ("Daily Camarilla H4 (Breakout Target)", cam_d["h4"]),
+            ("Daily Camarilla H5 (Exhaustion)", cam_d["h5"]),
+            ("Daily Camarilla L3 (Long Bounce Support)", cam_d["l3"]),
+            ("Daily Camarilla L4 (Breakdown Target)", cam_d["l4"]),
+            ("Daily Camarilla L5 (Exhaustion)", cam_d["l5"]),
+            ("Weekly Pivot (P_w)", p_w),
+            ("Weekly R1", r1_w),
+            ("Weekly R2", r2_w),
+            ("Weekly S1", s1_w),
+            ("Weekly S2", s2_w),
+            ("Weekly CPR TC", tc_w),
+            ("Weekly CPR BC", bc_w),
+            ("Weekly Camarilla H4", cam_w["h4"]),
+            ("Weekly Camarilla L4", cam_w["l4"]),
+        ]
+
+        for fib_k, fib_v in fib_levels.items():
+            raw_candidates.append((f"Macro {fib_k}", float(fib_v)))
+
+        for sz in supply_zones:
+            raw_candidates.append((f"Supply Zone ({sz['touches']}x tested)", float(sz["price"])))
+        for dz in demand_zones:
+            raw_candidates.append((f"Demand Zone ({dz['touches']}x tested)", float(dz["price"])))
+
+        # 7. Deduplication & Confluence Grouping into Resistances & Supports
+        raw_resistances = [c for c in raw_candidates if c[1] > cur_price * 1.0005]
+        raw_supports = [c for c in raw_candidates if c[1] < cur_price * 0.9995]
+
+        # Group resistances
+        grouped_res: List[Dict[str, Any]] = []
+        for tag, p in sorted(raw_resistances, key=lambda x: x[1]):
+            matched = False
+            for gr in grouped_res:
+                if abs(p - gr["price"]) / (gr["price"] + 1e-9) <= 0.0015:  # Within 0.15%
+                    gr["tags"].append(tag)
+                    gr["price"] = round((gr["price"] * (len(gr["tags"]) - 1) + p) / len(gr["tags"]), 2)
+                    matched = True
+                    break
+            if not matched:
+                grouped_res.append({"price": round(p, 2), "tags": [tag]})
+
+        # Group supports
+        grouped_supp: List[Dict[str, Any]] = []
+        for tag, p in sorted(raw_supports, key=lambda x: x[1], reverse=True):
+            matched = False
+            for gs in grouped_supp:
+                if abs(p - gs["price"]) / (gs["price"] + 1e-9) <= 0.0015:  # Within 0.15%
+                    gs["tags"].append(tag)
+                    gs["price"] = round((gs["price"] * (len(gs["tags"]) - 1) + p) / len(gs["tags"]), 2)
+                    matched = True
+                    break
+            if not matched:
+                grouped_supp.append({"price": round(p, 2), "tags": [tag]})
+
+        # Format final resistance hierarchy (sorted ascending by distance from spot)
+        res_hierarchy: List[Dict[str, Any]] = []
+        for r in sorted(grouped_res, key=lambda x: x["price"]):
+            dist_pts = round(r["price"] - cur_price, 2)
+            dist_pct = round((dist_pts / (cur_price + 1e-9)) * 100, 2)
+            c_count = len(r["tags"])
+            strength = "VERY_STRONG" if c_count >= 3 else ("STRONG" if c_count == 2 else "MODERATE")
+            res_hierarchy.append({
+                "price": r["price"],
+                "distance_pts": dist_pts,
+                "distance_pct": dist_pct,
+                "confluence_count": c_count,
+                "strength": strength,
+                "tags": r["tags"][:4],
+                "primary_label": r["tags"][0],
+            })
+
+        # Format final support hierarchy (sorted descending by price, closest to spot first)
+        supp_hierarchy: List[Dict[str, Any]] = []
+        for s in sorted(grouped_supp, key=lambda x: x["price"], reverse=True):
+            dist_pts = round(cur_price - s["price"], 2)
+            dist_pct = round((dist_pts / (cur_price + 1e-9)) * 100, 2)
+            c_count = len(s["tags"])
+            strength = "VERY_STRONG" if c_count >= 3 else ("STRONG" if c_count == 2 else "MODERATE")
+            supp_hierarchy.append({
+                "price": s["price"],
+                "distance_pts": dist_pts,
+                "distance_pct": dist_pct,
+                "confluence_count": c_count,
+                "strength": strength,
+                "tags": s["tags"][:4],
+                "primary_label": s["tags"][0],
+            })
+
+        # Extract primary R1/R2/R3 and S1/S2/S3
+        r_near_obj = res_hierarchy[0] if res_hierarchy else {"price": round(cur_price * 1.008, 2), "distance_pts": round(cur_price * 0.008, 2), "distance_pct": 0.8, "tags": ["R1 Resistance"], "strength": "MODERATE", "primary_label": "R1 Resistance"}
+        r_mid_obj = res_hierarchy[1] if len(res_hierarchy) > 1 else {"price": round(r_near_obj["price"] * 1.008, 2), "distance_pts": round(cur_price * 0.016, 2), "distance_pct": 1.6, "tags": ["R2 Resistance"], "strength": "MODERATE", "primary_label": "R2 Resistance"}
+        r_major_obj = res_hierarchy[2] if len(res_hierarchy) > 2 else {"price": round(r_mid_obj["price"] * 1.008, 2), "distance_pts": round(cur_price * 0.024, 2), "distance_pct": 2.4, "tags": ["R3 Major Ceiling"], "strength": "STRONG", "primary_label": "R3 Major Ceiling"}
+
+        s_near_obj = supp_hierarchy[0] if supp_hierarchy else {"price": round(cur_price * 0.992, 2), "distance_pts": round(cur_price * 0.008, 2), "distance_pct": 0.8, "tags": ["S1 Support"], "strength": "MODERATE", "primary_label": "S1 Support"}
+        s_mid_obj = supp_hierarchy[1] if len(supp_hierarchy) > 1 else {"price": round(s_near_obj["price"] * 0.992, 2), "distance_pts": round(cur_price * 0.016, 2), "distance_pct": 1.6, "tags": ["S2 Support"], "strength": "MODERATE", "primary_label": "S2 Support"}
+        s_major_obj = supp_hierarchy[2] if len(supp_hierarchy) > 2 else {"price": round(s_mid_obj["price"] * 0.992, 2), "distance_pts": round(cur_price * 0.024, 2), "distance_pct": 2.4, "tags": ["S3 Major Floor"], "strength": "STRONG", "primary_label": "S3 Major Floor"}
+
+        # 8. Structural Confluence Bias Analysis
+        r_lbl = r_near_obj.get("primary_label", "R1 Resistance")
+        s_lbl = s_near_obj.get("primary_label", "S1 Support")
+        r_tags = ", ".join(r_near_obj.get("tags", [r_lbl]))
+        s_tags = ", ".join(s_near_obj.get("tags", [s_lbl]))
+
+        if cur_price >= pdh and cur_price >= top_cpr_d:
+            conf_bias = "STRONG_BULLISH_EXPANSION"
+            conf_desc = f"Price (₹{cur_price:.2f}) broke above PDH (₹{pdh:.2f}) & Daily CPR (₹{top_cpr_d:.2f}). Immediate overhead hurdle is {r_lbl} at ₹{r_near_obj['price']:.2f} (+{r_near_obj['distance_pts']} pts)."
+        elif cur_price <= pdl and cur_price <= bot_cpr_d:
+            conf_bias = "STRONG_BEARISH_BREAKDOWN"
+            conf_desc = f"Price (₹{cur_price:.2f}) broke below PDL (₹{pdl:.2f}) & Daily CPR (₹{bot_cpr_d:.2f}). Immediate underlying floor is {s_lbl} at ₹{s_near_obj['price']:.2f} (-{s_near_obj['distance_pts']} pts)."
+        elif s_near_obj.get("distance_pct", 1.0) <= 0.20:
+            conf_bias = "TESTING_KEY_SUPPORT_BOUNCE"
+            conf_desc = f"Price (₹{cur_price:.2f}) holding tightly above key Support {s_lbl} at ₹{s_near_obj['price']:.2f} (Confluence: {s_tags})."
+        elif r_near_obj.get("distance_pct", 1.0) <= 0.20:
+            conf_bias = "TESTING_KEY_RESISTANCE_REJECTION"
+            conf_desc = f"Price (₹{cur_price:.2f}) testing key Overhead Resistance {r_lbl} at ₹{r_near_obj['price']:.2f} (Confluence: {r_tags})."
+        else:
+            conf_bias = "CONSOLIDATING_BETWEEN_SR"
+            conf_desc = f"Price (₹{cur_price:.2f}) trading inside range between Support ₹{s_near_obj['price']:.2f} ({s_lbl}) and Resistance ₹{r_near_obj['price']:.2f} ({r_lbl})."
+
+        return {
+            "symbol": symbol or "UNKNOWN",
+            "current_price": round(cur_price, 2),
+            "nearest_resistance": r_near_obj,
+            "nearest_support": s_near_obj,
+            "r_near": r_near_obj["price"],
+            "r_mid": r_mid_obj["price"],
+            "r_major": r_major_obj["price"],
+            "s_near": s_near_obj["price"],
+            "s_mid": s_mid_obj["price"],
+            "s_major": s_major_obj["price"],
+            "daily_cpr": {
+                "pivot": round(p_d, 2),
+                "tc": round(top_cpr_d, 2),
+                "bc": round(bot_cpr_d, 2),
+                "width_pct": cpr_w_pct_d,
+                "cpr_type": cpr_type_d,
+            },
+            "weekly_cpr": {
+                "pivot": round(p_w, 2),
+                "tc": round(top_cpr_w, 2),
+                "bc": round(bot_cpr_w, 2),
+                "width_pct": cpr_w_pct_w,
+                "cpr_type": cpr_type_w,
+            },
+            "camarilla_daily": cam_d,
+            "camarilla_weekly": cam_w,
+            "multi_day_extremes": {
+                "pdh": round(pdh, 2),
+                "pdl": round(pdl, 2),
+                "pdc": round(pdc, 2),
+                "pdo": round(pdo, 2),
+                "high_2d": round(h2d, 2),
+                "low_2d": round(l2d, 2),
+                "high_3d": round(h3d, 2),
+                "low_3d": round(l3d, 2),
+                "high_5d": round(h5d, 2),
+                "low_5d": round(l5d, 2),
+                "high_10d": round(h10d, 2),
+                "low_10d": round(l10d, 2),
+                "high_20d": round(h20d, 2),
+                "low_20d": round(l20d, 2),
+            },
+            "macro_fibonacci": macro_fib,
+            "swing_clusters": swing_clusters,
+            "resistance_hierarchy": res_hierarchy[:8],
+            "support_hierarchy": supp_hierarchy[:8],
+            "confluence_bias": conf_bias,
+            "description": conf_desc,
+        }
+
+    def run_full_pattern_scan(
+        self,
+        df: pd.DataFrame,
+        df_daily: Optional[pd.DataFrame] = None,
+        df_weekly: Optional[pd.DataFrame] = None,
+        symbol: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Executes unified scan for Candlesticks, Day Levels & CPR, Volumes/VWAP, SMC Order Blocks,
+        W/M Patterns, Price Action Momentum, and Multi-Timeframe Support & Resistance.
         """
         candles = self.detect_candlestick_patterns(df)
         day_levels = self.calculate_day_levels(df)
@@ -829,6 +1409,12 @@ class PatternService:
         order_blocks = self.detect_order_blocks(df)
         wm_patterns = self.detect_wm_patterns(df)
         pa_momentum = self.analyze_price_action_momentum(df)
+        multi_sr = self.calculate_multi_timeframe_sr(
+            df_intraday=df,
+            df_daily=df_daily,
+            df_weekly=df_weekly,
+            symbol=symbol,
+        )
 
         return {
             "candle_patterns": candles,
@@ -837,6 +1423,7 @@ class PatternService:
             "order_blocks": order_blocks,
             "wm_patterns": wm_patterns,
             "price_action_momentum": pa_momentum,
+            "multi_timeframe_sr": multi_sr,
         }
 
 

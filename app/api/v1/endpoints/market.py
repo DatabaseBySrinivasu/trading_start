@@ -234,11 +234,67 @@ def get_day_levels(
     period: str = Query("1mo", description="Historical period"),
     interval: str = Query("1d", description="Interval for daily levels"),
 ):
-    """Calculates PDH, PDL, PDC, CDH, CDL, Central Pivot Range (CPR), and R1/S1/R2/S2 levels."""
+    """Calculates PDH, PDL, PDC, CDH, CDL, Central Pivot Range (CPR), R1-R4, S1-S4, and Camarilla levels."""
     df = market_data_service.get_historical_candles(symbol, period=period, interval=interval)
     if df is None:
         raise HTTPException(status_code=404, detail=f"Candle data not found for symbol: {symbol}")
     return pattern_service.calculate_day_levels(df)
+
+
+@router.get("/support-resistance/{symbol}", summary="Unified Multi-Timeframe Support & Resistance Hierarchy")
+def get_multi_timeframe_support_resistance(symbol: str):
+    """
+    Computes comprehensive Multi-Timeframe Historical Support & Resistance:
+    - Multi-Day Extremes (PDH/PDL, 2DH-20DH, PWH/PWL, PMH/PML)
+    - Daily & Weekly Central Pivot Range (CPR)
+    - Daily & Weekly Classical Pivots (R1-R4, S1-S4)
+    - Daily & Weekly Camarilla Pivots (H1-H5, L1-L5)
+    - Supply & Demand Fractal Swing Clusters
+    - Macro Fibonacci Retracements & Golden Pocket
+    - Consolidated Resistance (R_near, R_mid, R_major) & Support (S_near, S_mid, S_major) Hierarchy
+    """
+    df_intra = market_data_service.get_historical_candles(symbol, period="5d", interval="15m")
+    df_daily = market_data_service.get_historical_candles(symbol, period="3mo", interval="1d")
+    df_weekly = market_data_service.get_historical_candles(symbol, period="6mo", interval="1wk")
+    return pattern_service.calculate_multi_timeframe_sr(
+        df_intraday=df_intra,
+        df_daily=df_daily,
+        df_weekly=df_weekly,
+        symbol=symbol,
+    )
+
+
+@router.get("/camarilla/{symbol}", summary="Get Daily & Weekly Camarilla Pivot System")
+def get_camarilla_pivots(
+    symbol: str,
+    period: str = Query("1mo", description="Historical period"),
+    interval: str = Query("1d", description="Candle interval"),
+):
+    """Calculates institutional Camarilla Pivot Levels (H1-H5, L1-L5) with breakout/breakdown status."""
+    df = market_data_service.get_historical_candles(symbol, period=period, interval=interval)
+    if df is None or len(df) < 2:
+        raise HTTPException(status_code=404, detail=f"Insufficient candle history for symbol: {symbol}")
+    prev_day = df.iloc[-2] if len(df) >= 2 else df.iloc[-1]
+    cur_p = float(df["close"].iloc[-1])
+    return pattern_service.calculate_camarilla_pivots(
+        high=float(prev_day["high"]),
+        low=float(prev_day["low"]),
+        close=float(prev_day["close"]),
+        cur_price=cur_p,
+    )
+
+
+@router.get("/macro-fibonacci/{symbol}", summary="Get Multi-Day Macro Fibonacci Retracements")
+def get_macro_fibonacci(
+    symbol: str,
+    period: str = Query("3mo", description="Historical period"),
+    interval: str = Query("1d", description="Candle interval"),
+):
+    """Calculates Multi-Day Macro Fibonacci Retracements (23.6%, 38.2%, 50%, 61.8% Golden Pocket, 78.6%, 161.8%)."""
+    df = market_data_service.get_historical_candles(symbol, period=period, interval=interval)
+    if df is None:
+        raise HTTPException(status_code=404, detail=f"Candle data not found for symbol: {symbol}")
+    return pattern_service.calculate_macro_fibonacci(df, lookback=45)
 
 
 @router.get("/orderblocks/{symbol}", summary="Get Smart Money Concepts (SMC) Order Blocks & Fair Value Gaps")

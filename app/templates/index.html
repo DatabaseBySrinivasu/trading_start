@@ -1436,6 +1436,18 @@
         </div>
       </div>
 
+      <!-- Feature Strip 4: Multi-Timeframe S/R & Camarilla -->
+      <div class="feature-strip">
+        <div>
+          <span>🧱 <b>Key S/R:</b> </span>
+          <span class="feature-chip" id="nifty-sr-bias">--</span>
+          <span style="color: var(--text-muted); margin-left: 4px;" id="nifty-sr-near">R: -- | S: --</span>
+        </div>
+        <div>
+          <span>Cam H4/L4: <b id="nifty-cam-h4l4" style="color: #38BDF8; font-family: 'JetBrains Mono';">-- / --</b></span>
+        </div>
+      </div>
+
       <!-- 1. OPTION CONTRACT STRIKE PREMIUM PRICING (TRADE EXECUTION) -->
       <div class="option-pricing-box">
         <div class="option-pricing-title">
@@ -1545,6 +1557,18 @@
         </div>
       </div>
 
+      <!-- Feature Strip 4: Multi-Timeframe S/R & Camarilla -->
+      <div class="feature-strip">
+        <div>
+          <span>🧱 <b>Key S/R:</b> </span>
+          <span class="feature-chip" id="banknifty-sr-bias">--</span>
+          <span style="color: var(--text-muted); margin-left: 4px;" id="banknifty-sr-near">R: -- | S: --</span>
+        </div>
+        <div>
+          <span>Cam H4/L4: <b id="banknifty-cam-h4l4" style="color: #38BDF8; font-family: 'JetBrains Mono';">-- / --</b></span>
+        </div>
+      </div>
+
       <!-- 1. OPTION CONTRACT STRIKE PREMIUM PRICING (TRADE EXECUTION) -->
       <div class="option-pricing-box">
         <div class="option-pricing-title">
@@ -1651,6 +1675,18 @@
         </div>
         <div>
           <span>🏛️ SMC: <b id="sensex-smc-bias" style="color: #D8B4FE; font-family: 'JetBrains Mono';">--</b></span>
+        </div>
+      </div>
+
+      <!-- Feature Strip 4: Multi-Timeframe S/R & Camarilla -->
+      <div class="feature-strip">
+        <div>
+          <span>🧱 <b>Key S/R:</b> </span>
+          <span class="feature-chip" id="sensex-sr-bias">--</span>
+          <span style="color: var(--text-muted); margin-left: 4px;" id="sensex-sr-near">R: -- | S: --</span>
+        </div>
+        <div>
+          <span>Cam H4/L4: <b id="sensex-cam-h4l4" style="color: #38BDF8; font-family: 'JetBrains Mono';">-- / --</b></span>
         </div>
       </div>
 
@@ -2765,6 +2801,33 @@
 
     if (sig.order_blocks) {
       smcBias.innerText = sig.order_blocks.smc_bias;
+    }
+
+    // Multi-Timeframe Historical S/R & Camarilla
+    if (sig.multi_timeframe_sr) {
+      const sr = sig.multi_timeframe_sr;
+      const srBiasEl = document.getElementById(`${prefix}-sr-bias`);
+      const srNearEl = document.getElementById(`${prefix}-sr-near`);
+      const camH4L4El = document.getElementById(`${prefix}-cam-h4l4`);
+
+      if (srBiasEl) {
+        const rawBias = sr.confluence_bias || 'NEUTRAL';
+        srBiasEl.innerText = rawBias.replace(/_/g, ' ');
+        const isBull = rawBias.includes('BULLISH') || rawBias.includes('BOUNCE');
+        const isBear = rawBias.includes('BEARISH') || rawBias.includes('REJECTION');
+        srBiasEl.style.background = isBull ? 'rgba(16, 185, 129, 0.2)' : (isBear ? 'rgba(239, 68, 68, 0.2)' : 'rgba(56, 189, 248, 0.2)');
+        srBiasEl.style.color = isBull ? '#34D399' : (isBear ? '#F87171' : '#38BDF8');
+      }
+      if (srNearEl) {
+        const rVal = sr.r_near ? `₹${sr.r_near}` : '--';
+        const sVal = sr.s_near ? `₹${sr.s_near}` : '--';
+        srNearEl.innerText = `R: ${rVal} | S: ${sVal}`;
+      }
+      if (camH4L4El && sr.daily_camarilla) {
+        const h4 = sr.daily_camarilla.h4 ? `₹${sr.daily_camarilla.h4}` : '--';
+        const l4 = sr.daily_camarilla.l4 ? `₹${sr.daily_camarilla.l4}` : '--';
+        camH4L4El.innerText = `${h4} / ${l4}`;
+      }
     }
 
     // Render Pattern & Price Action Momentum Badges

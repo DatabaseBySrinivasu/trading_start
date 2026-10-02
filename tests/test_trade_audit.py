@@ -17,18 +17,7 @@ def client():
 @pytest.fixture
 def audit_service(tmp_path):
     """Creates an isolated TradeAuditService instance for testing with a temp logs dir."""
-    svc = TradeAuditService()
-    svc.logs_dir = tmp_path / "logs"
-    svc.logs_dir.mkdir(parents=True, exist_ok=True)
-    svc.alerts_file = svc.logs_dir / "trade_alerts.jsonl"
-    svc.corrections_file = svc.logs_dir / "trade_corrections.jsonl"
-    svc.audit_log_file = svc.logs_dir / "trade_audit.log"
-    svc.stats_file = svc.logs_dir / "audit_stats.json"
-    svc.active_alerts = {}
-    svc.completed_alerts = []
-    svc.corrections_history = []
-    svc.symbol_loss_streak = {}
-    svc.symbol_confidence_boost = {}
+    svc = TradeAuditService(logs_dir=tmp_path / "logs")
     return svc
 
 

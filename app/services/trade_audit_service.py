@@ -28,10 +28,10 @@ class TradeAuditService:
     5. Self-Learning Recalibration: Dynamically adjusts required confluence thresholds if consecutive errors or market chop are detected.
     """
 
-    def __init__(self):
+    def __init__(self, logs_dir: Optional[Path] = None):
         self.lock = threading.Lock()
         self.root_dir = Path(__file__).resolve().parent.parent.parent
-        self.logs_dir = self.root_dir / "logs"
+        self.logs_dir = Path(logs_dir) if logs_dir else (self.root_dir / "logs")
         self.logs_dir.mkdir(parents=True, exist_ok=True)
 
         self.alerts_file = self.logs_dir / "trade_alerts.jsonl"

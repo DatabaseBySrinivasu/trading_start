@@ -389,6 +389,8 @@ class StrategyEngine:
             "levels": levels,
             "nearest_support": nearest_support,
             "nearest_resistance": nearest_resistance,
+            "golden_pocket": golden_pocket,
+            "golden_pocket_support": golden_pocket,
             "bias": bias,
             "description": desc,
         }
@@ -583,14 +585,15 @@ class StrategyEngine:
             bearish_score += 5
             reasons.append(f"News Sentiment: Neutral / Balanced ({news_score:+.2f})")
 
-        # 9. Candlestick Patterns, Day Levels, Volume/VWAP, Order Blocks (SMC), and W/M Patterns
-        pattern_scan = pattern_service.run_full_pattern_scan(df)
+        # 9. Candlestick Patterns, Day Levels, Volume/VWAP, Order Blocks (SMC), W/M Patterns, and Multi-Timeframe S/R
+        pattern_scan = pattern_service.run_full_pattern_scan(df, symbol=symbol)
         candle_patterns = pattern_scan.get("candle_patterns", [])
         day_levels = pattern_scan.get("day_levels", {})
         volume_analysis = pattern_scan.get("volume_analysis", {})
         order_blocks = pattern_scan.get("order_blocks", {})
         wm_patterns = pattern_scan.get("wm_patterns", {})
         pa_momentum = pattern_scan.get("price_action_momentum", {})
+        multi_sr = pattern_scan.get("multi_timeframe_sr", {})
 
         # 9a. Candlestick Patterns (Weight: 10)
         for cp in candle_patterns:
@@ -690,6 +693,33 @@ class StrategyEngine:
             bearish_score += 5
             reasons.append("Price Action: Top upper wick selling exhaustion detected")
 
+        # 9g. Multi-Timeframe Historical Support & Resistance Confluence (Weight: 20)
+        sr_bias = multi_sr.get("confluence_bias", "CONSOLIDATING_BETWEEN_SR")
+        nearest_res = multi_sr.get("nearest_resistance", {})
+        nearest_supp = multi_sr.get("nearest_support", {})
+        res_dist_pct = nearest_res.get("distance_pct", 1.0)
+        supp_dist_pct = nearest_supp.get("distance_pct", 1.0)
+
+        if sr_bias == "STRONG_BULLISH_EXPANSION":
+            bullish_score += 20
+            reasons.append(f"Historical S/R: Bullish Breakout above PDH & CPR floor (Next hurdle: {nearest_res.get('primary_label', 'R1')} at ₹{nearest_res.get('price', cur_price * 1.01)})")
+        elif sr_bias == "TESTING_KEY_SUPPORT_BOUNCE":
+            bullish_score += 15
+            reasons.append(f"Historical S/R: Rebounding from institutional support floor {nearest_supp.get('primary_label', 'S1')} at ₹{nearest_supp.get('price', cur_price * 0.99)}")
+        elif sr_bias == "STRONG_BEARISH_BREAKDOWN":
+            bearish_score += 20
+            reasons.append(f"Historical S/R: Bearish Breakdown below PDL & CPR ceiling (Next floor: {nearest_supp.get('primary_label', 'S1')} at ₹{nearest_supp.get('price', cur_price * 0.99)})")
+        elif sr_bias == "TESTING_KEY_RESISTANCE_REJECTION":
+            bearish_score += 15
+            reasons.append(f"Historical S/R: Rejecting from institutional overhead resistance {nearest_res.get('primary_label', 'R1')} at ₹{nearest_res.get('price', cur_price * 1.01)}")
+        else:
+            if res_dist_pct > 1.2 and supp_dist_pct <= 0.4:
+                bullish_score += 10
+                reasons.append(f"Historical S/R: Favorable upside clearance to {nearest_res.get('primary_label', 'R1')} (₹{nearest_res.get('price', cur_price * 1.01)})")
+            elif supp_dist_pct > 1.2 and res_dist_pct <= 0.4:
+                bearish_score += 10
+                reasons.append(f"Historical S/R: Downside room to {nearest_supp.get('primary_label', 'S1')} (₹{nearest_supp.get('price', cur_price * 0.99)})")
+
         # 10. India VIX Volatility Regime & Fear Index (Weight: 10)
         vix_intel = volatility_service.get_india_vix()
         vix_val = vix_intel.get("current_vix", 12.5)
@@ -731,50 +761,81 @@ class StrategyEngine:
         atr_val = float(last["atr"]) if not np.isnan(last["atr"]) else cur_price * 0.007
         atr_effective = max(cur_price * 0.004, min(cur_price * 0.012, atr_val))
 
+        # Support & Resistance levels from multi-timeframe analysis
+        s_near_val = multi_sr.get("s_near", cur_price - (1.0 * atr_effective))
+        s_mid_val = multi_sr.get("s_mid", cur_price - (1.8 * atr_effective))
+        r_near_val = multi_sr.get("r_near", cur_price + (1.0 * atr_effective))
+        r_mid_val = multi_sr.get("r_mid", cur_price + (1.8 * atr_effective))
+
         if net_score >= 20:
             recommendation = "CALL (CE)"
             signal_type = "BULLISH"
             tag_color = "green"
 
-            # Dynamic Support-Aware Stop Loss (approx 0.8x - 1.2x ATR)
-            fib_supp = fib.get("nearest_support", cur_price - (1.0 * atr_effective))
-            supp_dist = cur_price - fib_supp
-            if 0.75 * atr_effective <= supp_dist <= 1.4 * atr_effective:
-                stop_loss = round(fib_supp - (0.05 * atr_effective), 2)
+            # Dynamic Support-Aware Stop Loss (prefer nearest support floor, bounded by 0.6x - 1.5x ATR)
+            supp_dist = cur_price - s_near_val
+            if 0.5 * atr_effective <= supp_dist <= 1.5 * atr_effective:
+                stop_loss = round(s_near_val - (0.05 * atr_effective), 2)
             else:
-                stop_loss = round(cur_price - (1.0 * atr_effective), 2)
+                fib_supp = fib.get("nearest_support", cur_price - (1.0 * atr_effective))
+                f_dist = cur_price - fib_supp
+                if 0.6 * atr_effective <= f_dist <= 1.4 * atr_effective:
+                    stop_loss = round(fib_supp - (0.05 * atr_effective), 2)
+                else:
+                    stop_loss = round(cur_price - (1.0 * atr_effective), 2)
 
-            # Dynamic Resistance-Aware Target 1 (approx 1.2x - 1.5x ATR)
-            fib_res = fib.get("nearest_resistance", cur_price + (1.3 * atr_effective))
-            res_dist = fib_res - cur_price
-            if 1.0 * atr_effective <= res_dist <= 1.6 * atr_effective:
-                target_1 = round(fib_res, 2)
+            # Dynamic Resistance-Aware Target 1 (align to nearest overhead historical resistance)
+            res_dist = r_near_val - cur_price
+            if 0.8 * atr_effective <= res_dist <= 1.8 * atr_effective:
+                target_1 = round(r_near_val, 2)
             else:
-                target_1 = round(cur_price + (1.3 * atr_effective), 2)
+                fib_res = fib.get("nearest_resistance", cur_price + (1.3 * atr_effective))
+                f_dist = fib_res - cur_price
+                if 0.9 * atr_effective <= f_dist <= 1.6 * atr_effective:
+                    target_1 = round(fib_res, 2)
+                else:
+                    target_1 = round(cur_price + (1.3 * atr_effective), 2)
 
-            # Target 2 as steady second-tier expansion (1.6x of T1 move)
-            target_2 = round(target_1 + (0.9 * atr_effective), 2)
+            # Target 2 (align to mid-tier resistance or secondary expansion)
+            if r_mid_val > target_1 and (r_mid_val - cur_price) <= 2.8 * atr_effective:
+                target_2 = round(r_mid_val, 2)
+            else:
+                target_2 = round(target_1 + (0.9 * atr_effective), 2)
 
         elif net_score <= -20:
             recommendation = "PUT (PE)"
             signal_type = "BEARISH"
             tag_color = "red"
 
-            fib_res = fib.get("nearest_resistance", cur_price + (1.0 * atr_effective))
-            res_dist = fib_res - cur_price
-            if 0.75 * atr_effective <= res_dist <= 1.4 * atr_effective:
-                stop_loss = round(fib_res + (0.05 * atr_effective), 2)
+            # Dynamic Resistance-Aware Stop Loss (prefer nearest resistance ceiling)
+            res_dist = r_near_val - cur_price
+            if 0.5 * atr_effective <= res_dist <= 1.5 * atr_effective:
+                stop_loss = round(r_near_val + (0.05 * atr_effective), 2)
             else:
-                stop_loss = round(cur_price + (1.0 * atr_effective), 2)
+                fib_res = fib.get("nearest_resistance", cur_price + (1.0 * atr_effective))
+                f_dist = fib_res - cur_price
+                if 0.6 * atr_effective <= f_dist <= 1.4 * atr_effective:
+                    stop_loss = round(fib_res + (0.05 * atr_effective), 2)
+                else:
+                    stop_loss = round(cur_price + (1.0 * atr_effective), 2)
 
-            fib_supp = fib.get("nearest_support", cur_price - (1.3 * atr_effective))
-            supp_dist = cur_price - fib_supp
-            if 1.0 * atr_effective <= supp_dist <= 1.6 * atr_effective:
-                target_1 = round(fib_supp, 2)
+            # Dynamic Support-Aware Target 1 (align to nearest underlying historical support)
+            supp_dist = cur_price - s_near_val
+            if 0.8 * atr_effective <= supp_dist <= 1.8 * atr_effective:
+                target_1 = round(s_near_val, 2)
             else:
-                target_1 = round(cur_price - (1.3 * atr_effective), 2)
+                fib_supp = fib.get("nearest_support", cur_price - (1.3 * atr_effective))
+                f_dist = cur_price - fib_supp
+                if 0.9 * atr_effective <= f_dist <= 1.6 * atr_effective:
+                    target_1 = round(fib_supp, 2)
+                else:
+                    target_1 = round(cur_price - (1.3 * atr_effective), 2)
 
-            target_2 = round(target_1 - (0.9 * atr_effective), 2)
+            # Target 2 (align to mid-tier support or secondary expansion)
+            if s_mid_val < target_1 and (cur_price - s_mid_val) <= 2.8 * atr_effective:
+                target_2 = round(s_mid_val, 2)
+            else:
+                target_2 = round(target_1 - (0.9 * atr_effective), 2)
 
         else:
             recommendation = "NEUTRAL / WAIT"
@@ -934,6 +995,7 @@ class StrategyEngine:
             "order_blocks": order_blocks,
             "wm_patterns": wm_patterns,
             "price_action_momentum": pa_momentum,
+            "multi_timeframe_sr": multi_sr,
         }
 
         # 4. 21-FACTOR INSTITUTIONAL CONFLUENCE MATRIX
