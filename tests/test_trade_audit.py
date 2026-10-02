@@ -427,3 +427,156 @@ def test_technical_factors_logging_persistence(audit_service):
     assert "PRICE ACTION & SMART MONEY CONCEPTS" in log_content
     assert "MACRO SENTIMENT & VOLATILITY CONTEXT" in log_content
 
+
+def test_audit_detects_target_2_and_closes_trade(audit_service):
+    """Verifies that achieving Target 2 completes the trade with full profit booking."""
+    sample_signal = {
+        "symbol": "^NSEI",
+        "instrument": "NIFTY 50",
+        "recommendation": "BUY CALL (CE)",
+        "suggested_strike": "22500 CE",
+        "spot_price": 22450.0,
+        "option_entry_price": 140.0,
+        "option_target_1": 150.0,
+        "option_target_2": 170.0,
+        "option_stop_loss": 125.0,
+        "spot_levels": {
+            "spot_entry": 22450.0,
+            "spot_target_1": 22470.0,
+            "spot_target_2": 22520.0,
+            "spot_stop_loss": 22400.0,
+        },
+        "confidence_score": 85.0,
+        "lot_size": 65,
+    }
+
+    record = audit_service.log_trade_alert(sample_signal)
+    alert_id = record["alert_id"]
+
+    # Mock market reaching Target 2 spot (22520)
+    with patch("app.services.market_data.market_data_service.get_live_price", return_value={"price": 22525.0}):
+        with patch("app.services.telegram_service.telegram_service.send_message") as mock_tg:
+            with patch("app.services.instagram_service.instagram_service.send_message") as mock_ig:
+                corrections = audit_service.check_and_self_correct(force_dispatch=True)
+
+                assert len(corrections) == 1
+                corr = corrections[0]
+                assert corr["type"] == "TARGET_2_ACHIEVED"
+                assert corr["is_success"] is True
+                assert "TARGET 2" in corr["reason"].upper()
+                assert "BOOK FULL PROFIT" in corr["action_directive"].upper()
+                # Trade is completed and closed
+                assert alert_id not in audit_service.active_alerts
+                assert len(audit_service.completed_alerts) == 1
+                assert audit_service.completed_alerts[0]["status"] == "TARGET_2_HIT"
+
+                mock_tg.assert_called_once()
+                mock_ig.assert_called_once()
+
+
+def test_audit_detects_trend_reversal_exit(audit_service):
+    """Verifies that an adverse Supertrend / EMA 9/21 flip triggers an immediate exit alert."""
+    import pandas as pd
+    sample_signal = {
+        "symbol": "^NSEI",
+        "instrument": "NIFTY 50",
+        "recommendation": "BUY CALL (CE)",
+        "suggested_strike": "22500 CE",
+        "spot_price": 22450.0,
+        "option_entry_price": 140.0,
+        "option_target_1": 150.0,
+        "option_target_2": 170.0,
+        "option_stop_loss": 120.0,
+        "spot_levels": {
+            "spot_entry": 22450.0,
+            "spot_target_1": 22500.0,
+            "spot_target_2": 22550.0,
+            "spot_stop_loss": 22400.0,
+        },
+        "confidence_score": 75.0,
+    }
+
+    record = audit_service.log_trade_alert(sample_signal)
+    alert_id = record["alert_id"]
+
+    mock_df = pd.DataFrame({
+        "open": [22450.0] * 30,
+        "high": [22460.0] * 30,
+        "low": [22430.0] * 30,
+        "close": [22440.0] * 30,
+        "volume": [100000] * 30,
+    })
+
+    mock_df_ind = mock_df.copy()
+    mock_df_ind["supertrend_signal"] = "BEARISH"
+    mock_df_ind["supertrend"] = 22480.0
+    mock_df_ind["ema_9"] = 22430.0
+    mock_df_ind["ema_21"] = 22450.0
+
+    with patch("app.services.market_data.market_data_service.get_live_price", return_value={"price": 22440.0}):
+        with patch("app.services.market_data.market_data_service.get_historical_candles", return_value=mock_df):
+            with patch("app.services.pattern_service.pattern_service.analyze_price_action_momentum", return_value={"momentum_score": -35.0, "bos_status": "BEARISH_BOS"}):
+                with patch("app.services.strategy_engine.strategy_engine.calculate_indicators", return_value=mock_df_ind):
+                    with patch("app.services.telegram_service.telegram_service.send_message") as mock_tg:
+                        with patch("app.services.instagram_service.instagram_service.send_message") as mock_ig:
+                            corrections = audit_service.check_and_self_correct(force_dispatch=True)
+
+                            assert len(corrections) == 1
+                            corr = corrections[0]
+                            assert corr["type"] == "TREND_REVERSAL_EXIT"
+                            assert corr["is_success"] is False
+                            assert "EXIT CALL POSITION IMMEDIATELY" in corr["action_directive"]
+                            assert alert_id not in audit_service.active_alerts
+                            assert len(audit_service.completed_alerts) == 1
+                            assert audit_service.completed_alerts[0]["status"] == "REVERSED_INVALIDATED"
+
+                            mock_tg.assert_called_once()
+                            mock_ig.assert_called_once()
+
+
+def test_audit_detects_target_upgrade_on_momentum(audit_service):
+    """Verifies that strong momentum & volume surge triggers a Target Extension/Upgrade alert."""
+    import pandas as pd
+    sample_signal = {
+        "symbol": "^NSEI",
+        "instrument": "NIFTY 50",
+        "recommendation": "BUY CALL (CE)",
+        "suggested_strike": "22500 CE",
+        "spot_price": 22450.0,
+        "option_entry_price": 140.0,
+        "option_target_1": 150.0,
+        "option_target_2": 170.0,
+        "option_stop_loss": 125.0,
+        "spot_levels": {
+            "spot_entry": 22450.0,
+            "spot_target_1": 22500.0,
+            "spot_target_2": 22550.0,
+            "spot_stop_loss": 22400.0,
+        },
+        "confidence_score": 80.0,
+    }
+
+    record = audit_service.log_trade_alert(sample_signal)
+    alert_id = record["alert_id"]
+
+    mock_df = pd.DataFrame({"close": [22460.0] * 30, "volume": [200000] * 30})
+
+    # Spot moves to 22462 (option moves from 140 to 146, +6 pts gain, in profit range)
+    with patch("app.services.market_data.market_data_service.get_live_price", return_value={"price": 22462.0}):
+        with patch("app.services.market_data.market_data_service.get_historical_candles", return_value=mock_df):
+            with patch("app.services.pattern_service.pattern_service.analyze_price_action_momentum", return_value={"momentum_score": 45.0, "volume_surge": 2.1, "bos_status": "BULLISH_BOS"}):
+                with patch("app.services.telegram_service.telegram_service.send_message") as mock_tg:
+                    with patch("app.services.instagram_service.instagram_service.send_message") as mock_ig:
+                        corrections = audit_service.check_and_self_correct(force_dispatch=True)
+
+                        assert len(corrections) == 1
+                        corr = corrections[0]
+                        assert corr["type"] == "TARGET_REVISED_UPGRADE"
+                        assert corr["is_success"] is True
+                        assert "TARGET EXTENDED" in corr["action_directive"]
+                        assert audit_service.active_alerts[alert_id]["option_target_2"] > 170.0
+
+                        mock_tg.assert_called_once()
+                        mock_ig.assert_called_once()
+
+

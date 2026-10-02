@@ -420,8 +420,14 @@ class TradeAuditService:
             if not alert.get("target_2_hit"):
                 if (is_call and (cur_spot >= spot_t2 or cur_opt_est >= opt_t2)) or \
                    (is_put and (cur_spot <= spot_t2 or cur_opt_est >= opt_t2)):
+                    pts_gained = round(max(0.0, cur_opt_est - opt_entry), 2)
+                    lot_size = alert.get("lot_size", 1)
+                    profit_per_lot = round(pts_gained * lot_size, 2)
                     correction_type = "TARGET_2_ACHIEVED"
-                    correction_reason = f"Target 2 reached! Current Spot: ₹{cur_spot:,.2f} | Est Option Premium: ₹{cur_opt_est:,.2f}."
+                    correction_reason = (
+                        f"Target 2 reached (+{pts_gained} pts, +₹{profit_per_lot:,.2f}/lot)! "
+                        f"Current Spot: ₹{cur_spot:,.2f} | Est Option Premium: ₹{cur_opt_est:,.2f}."
+                    )
                     action_directive = "🏆 BOOK FULL PROFIT NOW. Target 2 objective completely fulfilled."
                     alert["target_2_hit"] = True
                     alert["status"] = "TARGET_2_HIT"
@@ -433,9 +439,17 @@ class TradeAuditService:
                 if (is_call and (cur_spot >= spot_t1 or cur_opt_est >= opt_t1)) or \
                    (is_put and (cur_spot <= spot_t1 or cur_opt_est >= opt_t1)):
                     pts_gained = round(max(0.0, cur_opt_est - opt_entry), 2)
+                    lot_size = alert.get("lot_size", 1)
+                    profit_per_lot = round(pts_gained * lot_size, 2)
                     correction_type = "TARGET_1_HIT_TRAIL_SL"
-                    correction_reason = f"Target 1 reached (+{pts_gained} pts)! Current Spot: ₹{cur_spot:,.2f} (Entry: ₹{spot_entry:,.2f})."
-                    action_directive = f"🎯 BOOK 70% PROFIT & TRAIL STOP LOSS TO COST (₹{opt_entry:,.2f}) to lock in gains risk-free."
+                    correction_reason = (
+                        f"Target 1 achieved (+{pts_gained} pts, +₹{profit_per_lot:,.2f}/lot)! "
+                        f"Current Spot: ₹{cur_spot:,.2f} (Entry: ₹{spot_entry:,.2f}) | Option: ₹{cur_opt_est:,.2f}."
+                    )
+                    action_directive = (
+                        f"🎯 BOOK 70% PROFIT & TRAIL STOP LOSS TO COST (₹{opt_entry:,.2f}). "
+                        f"Hold remaining 30% runner for Target 2 (₹{opt_t2:,.2f})."
+                    )
                     alert["target_1_hit"] = True
                     alert["status"] = "TARGET_1_HIT"
                     # Tighten stop loss to breakeven entry
@@ -443,7 +457,55 @@ class TradeAuditService:
                     alert["option_stop_loss"] = opt_entry
                     is_success = True
 
-            # C. STOP LOSS BREACH (Adverse Market Invalidation)
+            # C. DYNAMIC TARGET REVISION / EXTENSION (Momentum Expansion or Resistance Ahead)
+            if not correction_type and not mark_closed and not alert.get("target_revision_dispatched"):
+                try:
+                    # Check if trade is in solid profit (>= 50% towards Target 1) and momentum expands
+                    in_profit_pts = (cur_opt_est - opt_entry)
+                    if in_profit_pts >= max(3.0, (opt_t1 - opt_entry) * 0.50):
+                        df = market_data_service.get_historical_candles(sym, period="5d", interval="15m")
+                        if df is not None and not df.empty:
+                            from app.services.pattern_service import pattern_service
+                            pam = pattern_service.analyze_price_action_momentum(df)
+                            mom_score = float(pam.get("momentum_score", 0.0))
+                            vol_surge = pam.get("volume_surge", 1.0)
+
+                            # Case 1: Ultra-strong momentum -> Upgrade/Extend Targets
+                            if ((is_call and mom_score >= 40.0) or (is_put and mom_score <= -40.0)) and vol_surge >= 1.5:
+                                upgraded_opt_t2 = round(opt_t2 * 1.15, 2)
+                                upgraded_spot_t2 = round(spot_t2 + (abs(spot_t2 - spot_entry) * 0.20 * (1 if is_call else -1)), 2)
+                                correction_type = "TARGET_REVISED_UPGRADE"
+                                correction_reason = (
+                                    f"Strong volume expansion ({vol_surge:.1f}x) and breakout momentum ({mom_score:+.1f}). "
+                                    f"Target 2 extended from ₹{opt_t2:,.2f} to ₹{upgraded_opt_t2:,.2f}."
+                                )
+                                action_directive = (
+                                    f"🚀 TARGET EXTENDED: Hold position. Target 2 raised to ₹{upgraded_opt_t2:,.2f} "
+                                    f"(Spot T2: ₹{upgraded_spot_t2:,.2f}). Trail SL to ₹{max(opt_sl, opt_entry):,.2f}."
+                                )
+                                alert["option_target_2"] = upgraded_opt_t2
+                                alert["spot_target_2"] = upgraded_spot_t2
+                                alert["target_revision_dispatched"] = True
+                                is_success = True
+
+                            # Case 2: Chop / Resistance compression ahead -> Tighten Target to secure gains
+                            elif abs(mom_score) < 10.0 and in_profit_pts >= 4.0:
+                                tightened_opt_t1 = round(cur_opt_est, 2)
+                                correction_type = "TARGET_REVISED_TIGHTEN"
+                                correction_reason = (
+                                    f"Momentum slowing down near resistance. Tightening Target 1 to current market "
+                                    f"price (₹{tightened_opt_t1:,.2f}, +{in_profit_pts:.1f} pts) to lock in gains."
+                                )
+                                action_directive = (
+                                    f"⚠️ TIGHTEN TARGET & BOOK PROFIT NOW at ₹{tightened_opt_t1:,.2f} before intraday consolidation."
+                                )
+                                alert["option_target_1"] = tightened_opt_t1
+                                alert["target_revision_dispatched"] = True
+                                is_success = True
+                except Exception as ex:
+                    logger.debug(f"Target revision check error for {sym}: {ex}")
+
+            # D. STOP LOSS BREACH (Adverse Market Invalidation)
             if not correction_type:
                 sl_breached = False
                 if is_call and (cur_spot <= spot_sl or cur_opt_est <= opt_sl):
@@ -472,16 +534,19 @@ class TradeAuditService:
                         bos = str(pam.get("bos_status", ""))
 
                         # Technical indicators check (Supertrend & EMA 9/21)
-                        indicators = pattern_service.calculate_indicators(df)
-                        st_signal = str(indicators.get("supertrend_signal", "")).upper()
-                        ema_9 = float(indicators.get("ema_9", 0.0))
-                        ema_21 = float(indicators.get("ema_21", 0.0))
+                        from app.services.strategy_engine import strategy_engine
+                        df_ind = strategy_engine.calculate_indicators(df)
+                        last_row = df_ind.iloc[-1]
+                        st_signal = str(last_row.get("supertrend_signal", "")).upper()
+                        ema_9 = float(last_row.get("ema_9", 0.0))
+                        ema_21 = float(last_row.get("ema_21", 0.0))
+                        st_val = float(last_row.get("supertrend", 0.0))
 
                         # Call invalidated by sharp bearish breakout, Supertrend flip to BEARISH, or EMA 9 < 21 death cross
                         if is_call:
                             if st_signal == "BEARISH":
                                 correction_type = "TREND_REVERSAL_EXIT"
-                                correction_reason = f"Supertrend flipped BEARISH (Trailing Resistance: ₹{indicators.get('supertrend', 0.0):,.2f}). Upward trend broken."
+                                correction_reason = f"Supertrend flipped BEARISH (Trailing Resistance: ₹{st_val:,.2f}). Upward trend broken."
                                 action_directive = "🚨 EXIT CALL POSITION IMMEDIATELY. Trend has reversed BEARISH."
                                 alert["status"] = "REVERSED_INVALIDATED"
                                 mark_closed = True
@@ -505,7 +570,7 @@ class TradeAuditService:
                         elif is_put:
                             if st_signal == "BULLISH":
                                 correction_type = "TREND_REVERSAL_EXIT"
-                                correction_reason = f"Supertrend flipped BULLISH (Trailing Support: ₹{indicators.get('supertrend', 0.0):,.2f}). Downward trend broken."
+                                correction_reason = f"Supertrend flipped BULLISH (Trailing Support: ₹{st_val:,.2f}). Downward trend broken."
                                 action_directive = "🚨 EXIT PUT POSITION IMMEDIATELY. Trend has reversed BULLISH."
                                 alert["status"] = "REVERSED_INVALIDATED"
                                 mark_closed = True
@@ -641,9 +706,15 @@ class TradeAuditService:
         elif corr_type == "STOP_LOSS_EXIT":
             badge_icon = "🛑 STOP LOSS HIT: EXIT IMMEDIATELY"
         elif corr_type == "TARGET_2_ACHIEVED":
-            badge_icon = "🏆 FULL PROFIT BOOKED (TARGET 2 REACHED)"
+            badge_icon = "🏆 FULL PROFIT BOOKED (TARGET 2 HIT)"
         elif corr_type == "TARGET_1_HIT_TRAIL_SL":
             badge_icon = "🎯 TARGET 1 HIT: BOOK 70% & TRAIL SL TO COST"
+        elif corr_type == "TARGET_REVISED_UPGRADE":
+            badge_icon = "🚀 TARGET EXTENDED / UPGRADED (MOMENTUM SURGE)"
+        elif corr_type == "TARGET_REVISED_TIGHTEN":
+            badge_icon = "⚠️ TARGET REVISED & TIGHTENED (LOCK GAINS)"
+        elif corr_type == "TIME_DECAY_EXPIRY":
+            badge_icon = "⏸️ TIME EXPIRY: SQUARE OFF (THETA PROTECTION)"
         elif corr_event.get("is_success"):
             badge_icon = "🎯 PROFIT TARGET REACHED"
         else:
