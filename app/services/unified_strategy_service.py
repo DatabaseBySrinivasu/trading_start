@@ -574,7 +574,13 @@ class UnifiedStrategyService:
         vol_sma_s = vol_s.rolling(20, min_periods=1).mean()
 
         # 3. Fast Simulation Runner
-        def _run_simulation(df_data: pd.DataFrame, conf_thresh: float, chop_limit: float) -> Dict[str, Any]:
+        def _run_simulation(
+            df_data: pd.DataFrame,
+            conf_thresh: float,
+            chop_limit: float,
+            t1_mult: float = 1.0,
+            sl_mult: float = 1.0,
+        ) -> Dict[str, Any]:
             trades = []
             active_trade = None
             window_size = 15
@@ -690,16 +696,16 @@ class UnifiedStrategyService:
                     bull_score = (30.0 if p1_bull else 0.0) + (25.0 if p2_bull else 0.0) + (25.0 if p3_bull else 0.0) + (10.0 if chop[i] < 48.0 else 0.0)
                     bear_score = (30.0 if p1_bear else 0.0) + (25.0 if p2_bear else 0.0) + (25.0 if p3_bear else 0.0) + (10.0 if chop[i] < 48.0 else 0.0)
 
-                    exp_move = cur_atr * 1.2
+                    exp_move = cur_atr * t1_mult
                     if exp_move >= min_move:
                         if bull_score >= conf_thresh and bull_score > bear_score:
                             active_trade = {
                                 "type": "CALL",
                                 "entry_price": bar_close,
                                 "entry_time": bar_time,
-                                "spot_t1": round(bar_close + (1.2 * cur_atr), 2),
-                                "spot_t2": round(bar_close + (2.2 * cur_atr), 2),
-                                "spot_sl": round(bar_close - (0.8 * cur_atr), 2),
+                                "spot_t1": round(bar_close + (t1_mult * cur_atr), 2),
+                                "spot_t2": round(bar_close + ((t1_mult + 1.0) * cur_atr), 2),
+                                "spot_sl": round(bar_close - (sl_mult * cur_atr), 2),
                                 "t1_hit": False,
                                 "confidence": round(bull_score + 10.0, 1),
                             }
@@ -708,9 +714,9 @@ class UnifiedStrategyService:
                                 "type": "PUT",
                                 "entry_price": bar_close,
                                 "entry_time": bar_time,
-                                "spot_t1": round(bar_close - (1.2 * cur_atr), 2),
-                                "spot_t2": round(bar_close - (2.2 * cur_atr), 2),
-                                "spot_sl": round(bar_close + (0.8 * cur_atr), 2),
+                                "spot_t1": round(bar_close - (t1_mult * cur_atr), 2),
+                                "spot_t2": round(bar_close - ((t1_mult + 1.0) * cur_atr), 2),
+                                "spot_sl": round(bar_close + (sl_mult * cur_atr), 2),
                                 "t1_hit": False,
                                 "confidence": round(bear_score + 10.0, 1),
                             }
@@ -763,40 +769,58 @@ class UnifiedStrategyService:
 
         # 4. Initial Run with standard baseline
         current_conf = 60.0
-        current_chop = 61.8
-        sim_res = _run_simulation(df, current_conf, current_chop)
+        current_chop = 55.0
+        current_t1 = 1.0
+        current_sl = 1.0
+        sim_res = _run_simulation(df, current_conf, current_chop, current_t1, current_sl)
 
         # 5. Auto-Correction Optimization Loop (Grid calibration)
         auto_corrections_applied = []
         best_res = sim_res
         best_conf = current_conf
         best_chop = current_chop
+        best_t1 = current_t1
+        best_sl = current_sl
 
         if sim_res["win_rate_pct"] < min_acceptable_winrate:
-            for test_conf in [55.0, 60.0, 65.0, 70.0, 75.0, 80.0]:
-                for test_chop in [61.8, 55.0, 50.0, 45.0, 40.0]:
-                    test_res = _run_simulation(df, test_conf, test_chop)
-                    if test_res["total_trades"] >= 2:
-                        # Prioritize higher win rate and positive net points
-                        is_better_winrate = test_res["win_rate_pct"] > best_res["win_rate_pct"]
-                        is_same_winrate_better_pts = (
-                            test_res["win_rate_pct"] == best_res["win_rate_pct"]
-                            and test_res["total_points_gained"] > best_res["total_points_gained"]
-                        )
-                        if is_better_winrate or is_same_winrate_better_pts:
-                            best_res = test_res
-                            best_conf = test_conf
-                            best_chop = test_chop
+            for test_conf in [50.0, 55.0, 60.0, 65.0, 70.0]:
+                for test_chop in [61.8, 55.0, 50.0, 45.0]:
+                    for test_t1 in [0.8, 1.0, 1.2]:
+                        for test_sl in [0.8, 1.0]:
+                            test_res = _run_simulation(df, test_conf, test_chop, test_t1, test_sl)
+                            if test_res["total_trades"] >= 2:
+                                # Prioritize higher win rate and positive net points
+                                is_better_winrate = test_res["win_rate_pct"] > best_res["win_rate_pct"]
+                                is_same_winrate_better_pts = (
+                                    test_res["win_rate_pct"] == best_res["win_rate_pct"]
+                                    and test_res["total_points_gained"] > best_res["total_points_gained"]
+                                )
+                                if is_better_winrate or is_same_winrate_better_pts:
+                                    best_res = test_res
+                                    best_conf = test_conf
+                                    best_chop = test_chop
+                                    best_t1 = test_t1
+                                    best_sl = test_sl
 
-            if best_conf != current_conf or best_chop != current_chop:
+            if best_conf != current_conf or best_chop != current_chop or best_t1 != current_t1 or best_sl != current_sl:
                 auto_corrections_applied.append(
-                    f"Auto-Calibrated Parameters: Confidence -> {best_conf}%, Chop Filter -> {best_chop} "
+                    f"Auto-Calibrated Parameters: Confidence -> {best_conf}%, Chop Filter -> {best_chop}, "
+                    f"T1 -> {best_t1}x ATR, SL -> {best_sl}x ATR "
                     f"(Win Rate improved to {best_res['win_rate_pct']}%, Net Gain: +{best_res['total_points_gained']} pts)"
                 )
 
             # Store best calibrated parameters for this symbol
             if not hasattr(self, "calibrated_symbol_params"):
                 self.calibrated_symbol_params = {}
+            self.calibrated_symbol_params[canonical] = {
+                "min_confidence_score": best_conf,
+                "max_chop_index": best_chop,
+                "t1_multiplier": best_t1,
+                "sl_multiplier": best_sl,
+                "win_rate_achieved": best_res["win_rate_pct"],
+                "total_points_gained": best_res["total_points_gained"],
+                "profit_factor": best_res["profit_factor"],
+            }
             self.calibrated_symbol_params[canonical] = {
                 "min_confidence_score": best_conf,
                 "max_chop_index": best_chop,
