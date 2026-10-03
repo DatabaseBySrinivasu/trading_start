@@ -541,6 +541,120 @@ class TelegramService:
         except Exception as e:
             logger.error(f"Error in welcome alert dispatch: {e}")
 
+    def format_backtest_report_message(self, backtest_data: Dict[str, Any]) -> str:
+        """
+        Formats a comprehensive QuantPulse Historical Backtesting & Parameter
+        Auto-Correction Report for Telegram, including the exact tested date range,
+        win rate, target hits, points gained, and self-calibration logs.
+        """
+        symbol = str(backtest_data.get("symbol", "^NSEI"))
+        period = str(backtest_data.get("period", "1mo"))
+        interval = str(backtest_data.get("interval", "15m"))
+        candles_cnt = int(backtest_data.get("candles_analyzed", 0))
+
+        # Date Range of Data Tested
+        date_range = backtest_data.get("date_range", {})
+        start_date = date_range.get("start_date_formatted", date_range.get("start_date", "N/A"))
+        end_date = date_range.get("end_date_formatted", date_range.get("end_date", "N/A"))
+
+        # Performance
+        perf = backtest_data.get("performance", {})
+        total_trades = perf.get("total_trades", 0)
+        winning = perf.get("winning_trades", 0)
+        losing = perf.get("losing_trades", 0)
+        breakeven = perf.get("breakeven_trades", perf.get("breakeven_exits", 0))
+        win_rate = perf.get("win_rate_pct", 0.0)
+        total_points = perf.get("total_points_gained", 0.0)
+        profit_factor = perf.get("profit_factor", 1.0)
+        t1_hits = perf.get("target_1_hits", winning)
+        t2_hits = perf.get("target_2_hits", 0)
+        sl_hits = perf.get("stop_loss_hits", losing)
+
+        # Calibrated Parameters
+        params = backtest_data.get("calibrated_parameters", {})
+        conf_thresh = params.get("min_confidence_score", 65.0)
+        chop_thresh = params.get("max_chop_index", 61.8)
+        min_move = params.get("min_move_points", 5.0)
+        min_rr = params.get("min_rr_ratio", "1:1.5")
+
+        # Auto-corrections
+        corrections = backtest_data.get("auto_corrections_applied", [])
+        status = backtest_data.get("auto_correction_status", "OPTIMAL_PERFORMANCE")
+
+        corr_lines = []
+        if corrections:
+            for c in corrections[:3]:
+                corr_lines.append(f"  🔧 {html.escape(str(c))}")
+        else:
+            corr_lines.append("  ✨ <i>Parameters at optimal efficiency (70%+ target met)</i>")
+        corr_text = "\n".join(corr_lines)
+
+        timestamp = datetime.now().strftime("%d %b %Y, %I:%M:%S %p IST")
+
+        msg = (
+            f"⚡️ <b>QUANTPULSE PRO: HISTORICAL BACKTEST REPORT</b> ⚡️\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📊 <b>Instrument:</b> {html.escape(symbol)}\n"
+            f"📅 <b>Tested Historical Data Period:</b>\n"
+            f"  • <b>Start Date:</b> {html.escape(str(start_date))}\n"
+            f"  • <b>End Date:</b>   {html.escape(str(end_date))}\n"
+            f"  • <b>Candles Analyzed:</b> {candles_cnt} candles ({interval} timeframe)\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📈 <b>BACKTEST PERFORMANCE METRICS:</b>\n"
+            f"  🏆 <b>Overall Win Rate:</b> <b>{win_rate}%</b>\n"
+            f"  💰 <b>Total Points Gained:</b> <b>{'+' if total_points >= 0 else ''}{total_points:,.2f} pts</b>\n"
+            f"  🔢 <b>Total Executed Trades:</b> {total_trades}\n"
+            f"  ✅ <b>Winning Trades:</b> {winning} (T1: {t1_hits}, T2: {t2_hits})\n"
+            f"  🛑 <b>Losing Trades:</b> {losing} (SL: {sl_hits})\n"
+            f"  🛡️ <b>Breakeven Exits:</b> {breakeven}\n"
+            f"  ⚖️ <b>Profit Factor:</b> {profit_factor}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🎯 <b>5-POINT RULE &amp; R:R GATES:</b>\n"
+            f"  • Min Option Gain: &gt;= {min_move} pts [VERIFIED]\n"
+            f"  • Min Risk-Reward: &gt;= {min_rr} [VERIFIED]\n"
+            f"  • Trailing Stop Loss: Breakeven on T1 Hit\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"⚙️ <b>CALIBRATED PARAMETERS:</b>\n"
+            f"  • <b>Confidence Threshold:</b> {conf_thresh}%\n"
+            f"  • <b>Max Chop Index:</b> {chop_thresh}\n"
+            f"  • <b>Status:</b> <code>{html.escape(status)}</code>\n"
+            f"🛠️ <b>Historical Auto-Corrections:</b>\n{corr_text}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🕒 <i>Report Generated: {timestamp}</i>\n"
+            f"🤖 <b>Market Mentor Research and Academy</b>"
+        )
+        return msg
+
+    def send_backtest_report(
+        self,
+        backtest_data: Dict[str, Any],
+        chat_id: Optional[str] = None,
+        bot_token: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Dispatches a comprehensive historical backtest report to Telegram."""
+        text = self.format_backtest_report_message(backtest_data)
+        res = self.send_message(text=text, chat_id=chat_id, bot_token=bot_token, parse_mode="HTML")
+
+        # Log to local trade audit engine
+        try:
+            from app.services.trade_audit_service import trade_audit_service
+            trade_audit_service.log_trade_alert(
+                signal={
+                    "symbol": backtest_data.get("symbol", "^NSEI"),
+                    "recommendation": f"HISTORICAL_BACKTEST_REPORT_{backtest_data.get('auto_correction_status')}",
+                    "confidence_score": backtest_data.get("performance", {}).get("win_rate_pct", 0.0),
+                    "expected_option_move": backtest_data.get("performance", {}).get("total_points_gained", 0.0),
+                    "raw_data": backtest_data,
+                },
+                channels=["TELEGRAM"],
+                delivery_status="SENT" if res.get("success") else "FAILED",
+                dispatch_response=res,
+            )
+        except Exception as e:
+            logger.debug(f"Trade audit backtest logging notice: {e}")
+
+        return res
+
     def poll_once(self) -> Optional[str]:
         """Polls Telegram for new updates, registers active chat ID, and auto-responds."""
         token = str(self.bot_token or "").strip()

@@ -10,6 +10,7 @@ from app.services.angel_service import angel_client
 from app.services.local_data_service import local_data_service
 from app.services.institutional_order_flow_service import institutional_order_flow_service
 from app.services.unified_strategy_service import unified_strategy_service
+from app.services.instagram_service import instagram_service
 
 router = APIRouter()
 
@@ -509,18 +510,102 @@ def run_strategy_backtest_and_autocorrect(
     period: str = Query("1mo", description="Historical period for backtest"),
     interval: str = Query("15m", description="Candle interval"),
     min_winrate: float = Query(70.0, description="Minimum acceptable target winrate percentage"),
+    send_instagram: bool = Query(False, description="Whether to dispatch backtest report with tested dates to Instagram"),
+    send_telegram: bool = Query(False, description="Whether to dispatch backtest report with tested dates to Telegram"),
+    recipient_id: Optional[str] = Query(None, description="Optional target recipient ID / Chat ID"),
 ):
     """
     Runs historical candle-by-candle simulation on previous market data, evaluates performance
     metrics (Win Rate, Total Points, Target 1 / 2 Hits, Stop Loss Hits), and automatically
     auto-corrects strategy parameters if win rate is below threshold.
+    Optionally dispatches the backtest report with the exact tested date range to Telegram or Instagram.
     """
-    return unified_strategy_service.backtest_and_auto_correct(
+    res = unified_strategy_service.backtest_and_auto_correct(
         symbol=symbol,
         period=period,
         interval=interval,
         min_acceptable_winrate=min_winrate,
     )
+
+    if send_telegram:
+        tg_res = telegram_service.send_backtest_report(
+            backtest_data=res,
+            chat_id=recipient_id,
+        )
+        res["telegram_dispatch"] = tg_res
+
+    if send_instagram:
+        ig_res = instagram_service.send_backtest_report(
+            backtest_data=res,
+            recipient_id=recipient_id,
+        )
+        res["instagram_dispatch"] = ig_res
+
+    return res
+
+
+@router.post("/strategies/backtest/dispatch-telegram/{symbol}", summary="Run Backtest and Dispatch Report to Telegram")
+def dispatch_backtest_to_telegram(
+    symbol: str,
+    period: str = Query("1mo", description="Historical period for backtest"),
+    interval: str = Query("15m", description="Candle interval"),
+    min_winrate: float = Query(70.0, description="Minimum acceptable target winrate percentage"),
+    chat_id: Optional[str] = Query(None, description="Target Telegram Chat ID (defaults to 9100040008 / configured chat)"),
+):
+    """
+    Simulates historical candle-by-candle execution on previous data, executes auto-correction,
+    and directly dispatches the formatted report with tested dates to Telegram (9100040008).
+    """
+    res = unified_strategy_service.backtest_and_auto_correct(
+        symbol=symbol,
+        period=period,
+        interval=interval,
+        min_acceptable_winrate=min_winrate,
+    )
+    tg_res = telegram_service.send_backtest_report(
+        backtest_data=res,
+        chat_id=chat_id,
+    )
+    return {
+        "symbol": symbol,
+        "date_range": res.get("date_range"),
+        "performance": res.get("performance"),
+        "calibrated_parameters": res.get("calibrated_parameters"),
+        "auto_corrections_applied": res.get("auto_corrections_applied"),
+        "telegram_delivery": tg_res,
+    }
+
+
+@router.post("/strategies/backtest/dispatch-instagram/{symbol}", summary="Run Backtest and Dispatch Report to Instagram")
+def dispatch_backtest_to_instagram(
+    symbol: str,
+    period: str = Query("1mo", description="Historical period for backtest"),
+    interval: str = Query("15m", description="Candle interval"),
+    min_winrate: float = Query(70.0, description="Minimum acceptable target winrate percentage"),
+    recipient_id: Optional[str] = Query(None, description="Target Instagram recipient ID (defaults to 9100040008)"),
+):
+    """
+    Simulates historical candle-by-candle execution on previous data, executes auto-correction,
+    and directly dispatches the formatted report with tested dates to Instagram Direct (9100040008).
+    """
+    res = unified_strategy_service.backtest_and_auto_correct(
+        symbol=symbol,
+        period=period,
+        interval=interval,
+        min_acceptable_winrate=min_winrate,
+    )
+    ig_res = instagram_service.send_backtest_report(
+        backtest_data=res,
+        recipient_id=recipient_id,
+    )
+    return {
+        "symbol": symbol,
+        "date_range": res.get("date_range"),
+        "performance": res.get("performance"),
+        "calibrated_parameters": res.get("calibrated_parameters"),
+        "auto_corrections_applied": res.get("auto_corrections_applied"),
+        "instagram_delivery": ig_res,
+    }
 
 
 

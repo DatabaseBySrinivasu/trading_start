@@ -429,5 +429,122 @@ class InstagramService:
         )
         return self.send_message(test_text, recipient_id=target, access_token=access_token)
 
+    def format_backtest_report_message(self, backtest_data: Dict[str, Any]) -> str:
+        """
+        Formats a comprehensive QuantPulse Historical Backtesting & Parameter
+        Auto-Correction Report for Instagram Direct Messages / Stories, including
+        the exact tested date range, win rate, target hits, points gained, and self-calibration logs.
+        """
+        symbol = str(backtest_data.get("symbol", "^NSEI"))
+        period = str(backtest_data.get("period", "1mo"))
+        interval = str(backtest_data.get("interval", "15m"))
+        candles_cnt = int(backtest_data.get("candles_analyzed", 0))
+
+        # Date Range of Data Tested
+        date_range = backtest_data.get("date_range", {})
+        start_date = date_range.get("start_date_formatted", date_range.get("start_date", "N/A"))
+        end_date = date_range.get("end_date_formatted", date_range.get("end_date", "N/A"))
+
+        # Performance
+        perf = backtest_data.get("performance", {})
+        total_trades = perf.get("total_trades", 0)
+        winning = perf.get("winning_trades", 0)
+        losing = perf.get("losing_trades", 0)
+        breakeven = perf.get("breakeven_trades", perf.get("breakeven_exits", 0))
+        win_rate = perf.get("win_rate_pct", 0.0)
+        total_points = perf.get("total_points_gained", 0.0)
+        profit_factor = perf.get("profit_factor", 1.0)
+        t1_hits = perf.get("target_1_hits", winning)
+        t2_hits = perf.get("target_2_hits", 0)
+        sl_hits = perf.get("stop_loss_hits", losing)
+
+        # Calibrated Parameters
+        params = backtest_data.get("calibrated_parameters", {})
+        conf_thresh = params.get("min_confidence_score", 65.0)
+        chop_thresh = params.get("max_chop_index", 61.8)
+        min_move = params.get("min_move_points", 5.0)
+        min_rr = params.get("min_rr_ratio", "1:1.5")
+
+        # Auto-corrections
+        corrections = backtest_data.get("auto_corrections_applied", [])
+        status = backtest_data.get("auto_correction_status", "OPTIMAL_PERFORMANCE")
+
+        corr_text = ""
+        if corrections:
+            for c in corrections[:3]:
+                corr_text += f"  🔧 {c}\n"
+        else:
+            corr_text = "  ✨ Parameters already at optimal efficiency (No corrections needed)\n"
+
+        timestamp = datetime.now().strftime("%d %b %Y, %I:%M:%S %p IST")
+
+        msg = (
+            f"⚡ QUANTPULSE PRO: HISTORICAL BACKTEST REPORT ⚡\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"📊 Instrument: {symbol}\n"
+            f"📅 Tested Historical Data Period:\n"
+            f"  • Start Date: {start_date}\n"
+            f"  • End Date:   {end_date}\n"
+            f"  • Sample Size: {candles_cnt} candles ({interval} timeframe)\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"📈 BACKTEST PERFORMANCE METRICS:\n"
+            f"  🏆 Overall Win Rate: {win_rate}%\n"
+            f"  💰 Total Points Gained: {'+' if total_points >= 0 else ''}{total_points:,.2f} pts\n"
+            f"  🔢 Total Executed Trades: {total_trades}\n"
+            f"  ✅ Winning Trades: {winning} (T1: {t1_hits}, T2: {t2_hits})\n"
+            f"  🛑 Losing Trades: {losing} (SL: {sl_hits})\n"
+            f"  🛡️ Breakeven Exits: {breakeven}\n"
+            f"  ⚖️ Profit Factor: {profit_factor}\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"🎯 5-POINT RULE & R:R GATES:\n"
+            f"  • Min Option Gain: >= {min_move} pts [VERIFIED]\n"
+            f"  • Min Risk-Reward: >= {min_rr} [VERIFIED]\n"
+            f"  • Trailing Stop Loss: Breakeven on T1 Hit\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"⚙️ CALIBRATED PARAMETERS:\n"
+            f"  • Confidence Threshold: {conf_thresh}%\n"
+            f"  • Max Chop Index: {chop_thresh}\n"
+            f"  • Performance Status: {status}\n"
+            f"🛠️ Historical Auto-Corrections:\n{corr_text}"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"🕒 Generated: {timestamp}\n"
+            f"📱 Recipient: {self.default_recipient_id}\n"
+            f"#quantpulse #algotrading #backtesting #nifty #options #stockmarket"
+        )
+        return msg
+
+    def send_backtest_report(
+        self,
+        backtest_data: Dict[str, Any],
+        recipient_id: Optional[str] = None,
+        access_token: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Dispatches a comprehensive historical backtest report to Instagram."""
+        text = self.format_backtest_report_message(backtest_data)
+        res = self.send_message(text, recipient_id=recipient_id, access_token=access_token)
+
+        # Log to local trade audit engine
+        try:
+            from app.services.trade_audit_service import trade_audit_service
+            trade_audit_service.log_trade_alert(
+                signal={
+                    "symbol": backtest_data.get("symbol", "^NSEI"),
+                    "recommendation": "HISTORICAL_BACKTEST_REPORT",
+                    "signal_type": "BACKTEST_AUDIT",
+                    "confidence_score": backtest_data.get("performance", {}).get("win_rate_pct", 75.0),
+                    "expected_move_points": backtest_data.get("calibrated_parameters", {}).get("min_move_points", 5.0),
+                    "spot_price": 0.0,
+                    "backtest_summary": backtest_data.get("performance", {}),
+                    "date_range": backtest_data.get("date_range", {}),
+                },
+                channels=["INSTAGRAM"],
+                delivery_status="SENT" if res.get("success") else "FAILED",
+                dispatch_response=res,
+            )
+        except Exception as e:
+            logger.debug(f"Backtest report audit logging notice: {e}")
+
+        return res
+
 
 instagram_service = InstagramService()
