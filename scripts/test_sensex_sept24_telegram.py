@@ -81,9 +81,11 @@ def main():
         status_icon = "🏆" if is_win else "🛑"
         opt_gain = round(t["points_gain"] * 0.55, 2)
         opt_pnl = round(opt_gain * lot_size, 2)
+        strike_price = int(round(float(t["entry_price"]) / 100.0) * 100)
+        option_sym = f"{strike_price} {'PE' if t['type']=='PUT' else 'CE'}"
 
         trade_details_html += (
-            f"<b>Trade #{idx}: {status_icon} BUY {t['type']} (74200 {'PE' if t['type']=='PUT' else 'CE'})</b>\n"
+            f"<b>Trade #{idx}: {status_icon} BUY {t['type']} ({option_sym})</b>\n"
             f"  • <b>Entry:</b> {entry_t} IST @ ₹{t['entry_price']:,.2f}\n"
             f"  • <b>Target 1:</b> ₹{t['spot_t1']:,.2f} | <b>Target 2:</b> ₹{t['spot_t2']:,.2f}\n"
             f"  • <b>Exit:</b> {exit_t} IST @ ₹{t['exit_price']:,.2f} (<code>{t['outcome']}</code>)\n"
@@ -102,10 +104,10 @@ def main():
         f"📍 <b>Price Range on 24-Sep:</b> Open: ₹{day_open:,.2f} | High: ₹{day_high:,.2f} | Low: ₹{day_low:,.2f} | Close: ₹{day_close:,.2f}\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"📈 <b>24TH SEPT PERFORMANCE SUMMARY:</b>\n"
-        f"  🏆 <b>Session Win Rate:</b> <b>{win_rate_24}%</b> (Target 2 Master Win)\n"
+        f"  🏆 <b>Session Win Rate:</b> <b>{win_rate_24}%</b>\n"
         f"  💰 <b>Net Spot Points Gained:</b> <b>{'+' if net_pts_24 > 0 else ''}{net_pts_24:,.2f} pts</b>\n"
         f"  💵 <b>Net Option P&amp;L (1 Lot / 20 Qty):</b> <b>{'+' if approx_net_pnl > 0 else ''}₹{approx_net_pnl:,.2f}</b>\n"
-        f"  🔢 <b>Total Trades:</b> {len(sept24_trades)} (1 Target 2 Hit, 1 Trailing Stop/SL)\n"
+        f"  🔢 <b>Total Trades:</b> {len(sept24_trades)} ({len(winning_24)} Wins, {len(losing_24)} Losses)\n"
         f"  ⚖️ <b>Profit Factor:</b> 2.77\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"🎯 <b>INTRADAY TRADE-BY-TRADE AUDIT (24-SEP):</b>\n\n"

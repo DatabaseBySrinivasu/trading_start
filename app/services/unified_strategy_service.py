@@ -597,6 +597,7 @@ class UnifiedStrategyService:
             st_d = st_dir
 
             min_move = 1.0 if canonical in ["NATURALGAS", "NG=F"] else 5.0
+            cooldown_bars = 0
 
             for i in range(window_size, n_bars):
                 bar_high = float(highs[i])
@@ -621,6 +622,7 @@ class UnifiedStrategyService:
                             active_trade["points_gain"] = round(t2_spot - active_trade["entry_price"], 2)
                             trades.append(active_trade)
                             active_trade = None
+                            cooldown_bars = 4  # Institutional Profit-Lock Cooldown
                         elif bar_high >= t1_spot and not active_trade.get("t1_hit"):
                             active_trade["t1_hit"] = True
                             active_trade["spot_sl"] = active_trade["entry_price"]  # Trail to breakeven
@@ -646,6 +648,7 @@ class UnifiedStrategyService:
                             active_trade["points_gain"] = round(active_trade["entry_price"] - t2_spot, 2)
                             trades.append(active_trade)
                             active_trade = None
+                            cooldown_bars = 4  # Institutional Profit-Lock Cooldown
                         elif bar_low <= t1_spot and not active_trade.get("t1_hit"):
                             active_trade["t1_hit"] = True
                             active_trade["spot_sl"] = active_trade["entry_price"]  # Trail to breakeven
@@ -663,8 +666,18 @@ class UnifiedStrategyService:
                             trades.append(active_trade)
                             active_trade = None
 
+                # Decrement cooldown
+                if cooldown_bars > 0:
+                    cooldown_bars -= 1
+                    continue
+
                 # Check for new entry trigger
                 if active_trade is None and chop[i] <= chop_limit:
+                    dist_ema21 = abs(bar_close - ema21[i]) / cur_atr
+                    # Factor 9: Overextension / Mean-Reversion Filter (Prevent entries when stretched > 2.8 ATR)
+                    if dist_ema21 > 2.8:
+                        continue
+
                     p1_bull = (bar_close >= ema9[i]) and (ema9[i] >= ema21[i]) and (st_d[i] == 1)
                     p1_bear = (bar_close <= ema9[i]) and (ema9[i] <= ema21[i]) and (st_d[i] == -1)
 
