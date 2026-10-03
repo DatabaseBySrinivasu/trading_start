@@ -667,18 +667,36 @@ class InstitutionalFilterEngine:
         self,
         symbol: str,
         df: pd.DataFrame,
-        cur_price: float,
-        indicators: Dict[str, Any],
-        cpr_data: Dict[str, Any],
-        pattern_data: Dict[str, Any],
-        vix_data: Dict[str, Any],
-        pcr_data: Dict[str, Any],
-        proposed_trade: Dict[str, Any],
+        cur_price: Optional[float] = None,
+        indicators: Optional[Dict[str, Any]] = None,
+        cpr_data: Optional[Dict[str, Any]] = None,
+        pattern_data: Optional[Dict[str, Any]] = None,
+        vix_data: Optional[Dict[str, Any]] = None,
+        pcr_data: Optional[Dict[str, Any]] = None,
+        proposed_trade: Optional[Dict[str, Any]] = None,
+        live_price: Optional[float] = None,
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Synthesizes all 21 factors into a comprehensive institutional matrix.
         Returns a structured dictionary with individual factor statuses and scores.
         """
+        if cur_price is None:
+            cur_price = live_price if live_price is not None and live_price > 0 else (
+                float(df["close"].iloc[-1]) if df is not None and len(df) > 0 and "close" in df.columns else 22500.0
+            )
+        if indicators is None:
+            indicators = {}
+        if cpr_data is None:
+            cpr_data = {}
+        if pattern_data is None:
+            pattern_data = {}
+        if vix_data is None:
+            vix_data = {}
+        if pcr_data is None:
+            pcr_data = {}
+        if proposed_trade is None:
+            proposed_trade = {}
         is_commodity = any(c in symbol.upper() for c in ["CRUDEOIL", "NATURALGAS", "GOLD", "SILVER", "COPPER", "MCX"])
         atr_val = indicators.get("atr", cur_price * 0.007)
         adx_val = indicators.get("adx", 22.0)

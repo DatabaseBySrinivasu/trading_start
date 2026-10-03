@@ -101,6 +101,23 @@ class InstagramService:
         pcr_val = pcr.get("pcr_oi", "N/A")
         pcr_sent = pcr.get("sentiment", "NEUTRAL")
 
+        # Institutional Order Flow & Order Blocks
+        iof = sig.get("institutional_order_flow", {})
+        inst_phase_badge = str(iof.get("phase_badge", "")).replace("_", " ")
+        buyer_pct = float(iof.get("buyer_dominance_pct", 50.0))
+        cvd_val = float(iof.get("cumulative_volume_delta", 0.0))
+        nearest_bull = iof.get("nearest_bullish_ob")
+        nearest_bear = iof.get("nearest_bearish_ob")
+
+        ob_text = ""
+        if "CALL" in rec_icon and nearest_bull:
+            ob_text = f"  📦 Demand OB: ₹{nearest_bull.get('zone_bottom')} - ₹{nearest_bull.get('zone_top')} [{nearest_bull.get('mitigation_status', 'ACTIVE')}]\n"
+        elif "PUT" in rec_icon and nearest_bear:
+            ob_text = f"  📦 Supply OB: ₹{nearest_bear.get('zone_bottom')} - ₹{nearest_bear.get('zone_top')} [{nearest_bear.get('mitigation_status', 'ACTIVE')}]\n"
+
+        if inst_phase_badge and inst_phase_badge != "NEUTRAL":
+            ob_text += f"  🏛️ Flow: {inst_phase_badge} (CVD: {cvd_val:+,.0f})\n"
+
         reasons = sig.get("confluence_reasons", [])
         reasons_text = ""
         for r in reasons[:3]:
@@ -147,6 +164,7 @@ class InstagramService:
             f"  • Spot Price: ₹{spot_ltp:,.2f} {unit}\n"
             f"  • Momentum: {mom_regime}\n"
             f"  • PCR (OI): {pcr_val} ({pcr_sent})\n"
+            f"{ob_text}"
             f"{matrix_text}"
             f"💡 Factors:\n{reasons_text}"
             f"━━━━━━━━━━━━━━━━━━━━\n"

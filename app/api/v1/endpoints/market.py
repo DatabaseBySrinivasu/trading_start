@@ -8,6 +8,8 @@ from app.services.pattern_service import pattern_service
 from app.services.volatility_service import volatility_service
 from app.services.angel_service import angel_client
 from app.services.local_data_service import local_data_service
+from app.services.institutional_order_flow_service import institutional_order_flow_service
+from app.services.unified_strategy_service import unified_strategy_service
 
 router = APIRouter()
 
@@ -299,16 +301,68 @@ def get_macro_fibonacci(
 
 
 @router.get("/orderblocks/{symbol}", summary="Get Smart Money Concepts (SMC) Order Blocks & Fair Value Gaps")
+@router.get("/order-blocks/{symbol}", summary="Get Institutional Order Blocks & Mitigation Status")
 def get_order_blocks(
     symbol: str,
     period: str = Query("1mo", description="Historical period"),
     interval: str = Query("15m", description="Candle interval"),
 ):
-    """Identifies institutional Bullish/Bearish Order Blocks (Demand/Supply Zones) and Fair Value Gaps (FVG)."""
+    """
+    Identifies institutional Bullish Demand Zones & Bearish Supply Zones with exact [Low - High] price bounds,
+    50% Mean Threshold, Mitigation lifecycle tracking (UNMITIGATED_FRESH, TESTED_REJECTED, BREACHED_BREAKER),
+    and Fair Value Gaps (FVG).
+    """
     df = market_data_service.get_historical_candles(symbol, period=period, interval=interval)
     if df is None:
         raise HTTPException(status_code=404, detail=f"Candle data not found for symbol: {symbol}")
-    return pattern_service.detect_order_blocks(df)
+    return institutional_order_flow_service.detect_order_blocks(df)
+
+
+@router.get("/institutional-flow/{symbol}", summary="Get Institutional Buyer vs Seller Flow & Timeline")
+def get_institutional_flow(
+    symbol: str,
+    period: str = Query("1mo", description="Historical period"),
+    interval: str = Query("15m", description="Candle interval"),
+):
+    """
+    Analyzes institutional buyer vs seller order flow:
+    - Cumulative Volume Delta (CVD)
+    - Institutional Buying vs Selling Phase (Accumulation, Markup, Distribution, Markdown)
+    - Delta Divergences (Bullish Absorption vs Bearish Exhaustion)
+    - Chronological Institutional Activity Timeline with timestamps (IST) and price levels.
+    """
+    df = market_data_service.get_historical_candles(symbol, period=period, interval=interval)
+    if df is None:
+        raise HTTPException(status_code=404, detail=f"Candle data not found for symbol: {symbol}")
+    return institutional_order_flow_service.analyze_institutional_flow_and_timeline(df, symbol=symbol)
+
+
+@router.get("/smart-money/{symbol}", summary="Complete Institutional Order Blocks & Smart Money Footprint")
+def get_smart_money_snapshot(
+    symbol: str,
+    period: str = Query("1mo", description="Historical period"),
+    interval: str = Query("15m", description="Candle interval"),
+):
+    """
+    Synthesizes complete Institutional Order Block & Order Flow Intelligence:
+    1. Bullish Demand & Bearish Supply Order Blocks with mitigation status.
+    2. Unfilled Fair Value Gaps (FVGs).
+    3. Real-time CVD and Institutional Phase (Accumulation / Distribution).
+    4. Chronological Timeline of WHEN institutions bought and sold.
+    5. Option Chain Institutional Writing Footprint.
+    """
+    df = market_data_service.get_historical_candles(symbol, period=period, interval=interval)
+    if df is None:
+        raise HTTPException(status_code=404, detail=f"Candle data not found for symbol: {symbol}")
+    live = market_data_service.get_live_price(symbol)
+    cur_p = live["price"] if live and live.get("price") else 0.0
+    pcr_data = pcr_service.analyze_pcr(symbol, spot_price=cur_p)
+    return institutional_order_flow_service.get_comprehensive_institutional_snapshot(
+        symbol=symbol,
+        df=df,
+        live_price=cur_p,
+        pcr_data=pcr_data,
+    )
 
 
 @router.get("/wm/{symbol}", summary="Detect W-Pattern (Double Bottom) & M-Pattern (Double Top)")
@@ -412,6 +466,62 @@ def sync_all_symbols_to_local(force_refresh: bool = Query(False, description="Fo
     Indices, MCX Commodities, and Watchlist Equities directly to local storage.
     """
     return local_data_service.sync_all_tracked_symbols(market_data_service, force_refresh=force_refresh)
+
+
+@router.get("/strategies/catalog", summary="Get Full Strategies & Indicators Catalog")
+def get_strategies_catalog():
+    """Returns the comprehensive catalog of all 15+ underlying strategies and indicator parameters."""
+    return {
+        "count": len(unified_strategy_service.get_strategies_catalog()),
+        "strategies": unified_strategy_service.get_strategies_catalog(),
+    }
+
+
+@router.get("/strategies/master/{symbol}", summary="Evaluate 4-Pillar Simple Master Strategy")
+def evaluate_master_strategy(
+    symbol: str,
+    period: str = Query("5d", description="Historical period"),
+    interval: str = Query("15m", description="Candle interval"),
+):
+    """
+    Evaluates the simplified 4-Pillar Master Decision Strategy:
+    1. Pillar 1: Directional Bias (Supertrend + Multi-EMA + Slope)
+    2. Pillar 2: Smart Money Fuel (CVD + Bar Delta + Order Blocks)
+    3. Pillar 3: High-Probability Location (Demand/Supply Zones + Camarilla + CPR + Fibonacci)
+    4. Pillar 4: Risk-Reward & Quality Gate (Choppiness Index CHOP < 61.8 + Min 5 Pts Move)
+    """
+    live = market_data_service.get_live_price(symbol)
+    cur_p = live["price"] if live and live.get("price") else 0.0
+    pcr_data = pcr_service.analyze_pcr(symbol, spot_price=cur_p)
+    return unified_strategy_service.evaluate_simple_master_strategy(
+        symbol=symbol,
+        live_price=cur_p,
+        pcr_data=pcr_data,
+        period=period,
+        interval=interval,
+    )
+
+
+@router.get("/strategies/backtest/{symbol}", summary="Run Backtest & Auto-Correction on Previous Data")
+@router.post("/strategies/backtest/{symbol}", summary="Run Backtest & Auto-Correction on Previous Data")
+def run_strategy_backtest_and_autocorrect(
+    symbol: str,
+    period: str = Query("1mo", description="Historical period for backtest"),
+    interval: str = Query("15m", description="Candle interval"),
+    min_winrate: float = Query(70.0, description="Minimum acceptable target winrate percentage"),
+):
+    """
+    Runs historical candle-by-candle simulation on previous market data, evaluates performance
+    metrics (Win Rate, Total Points, Target 1 / 2 Hits, Stop Loss Hits), and automatically
+    auto-corrects strategy parameters if win rate is below threshold.
+    """
+    return unified_strategy_service.backtest_and_auto_correct(
+        symbol=symbol,
+        period=period,
+        interval=interval,
+        min_acceptable_winrate=min_winrate,
+    )
+
 
 
 @router.get("/local-data/candles/{symbol}", summary="Load stored historical candles from local disk")

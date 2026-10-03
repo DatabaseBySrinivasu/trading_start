@@ -1093,6 +1093,116 @@
       line-height: 1.35;
     }
 
+    /* 4-Pillar Simple Master Strategy & Backtest Cockpit */
+    .master-strategy-section {
+      background: linear-gradient(180deg, #091528 0%, #050B18 100%);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    .master-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .pillar-card {
+      background: #07101E;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+
+    .pillar-card.pillar-pass {
+      border-top: 3px solid #10B981;
+    }
+
+    .pillar-card.pillar-fail {
+      border-top: 3px solid #EF4444;
+    }
+
+    .pillar-card.pillar-neutral {
+      border-top: 3px solid #64748B;
+    }
+
+    .pillar-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pillar-status {
+      font-size: 14px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .pillar-desc {
+      font-size: 10.5px;
+      color: #94A3B8;
+      line-height: 1.4;
+    }
+
+    .master-decision-banner {
+      background: #0D1B33;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .backtest-panel {
+      background: #060D19;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+    }
+
+    .catalog-card {
+      background: #0A1426;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
     /* Audit & Self-Correction Engine */
     .audit-section {
       background: linear-gradient(180deg, #09101F 0%, #060A14 100%);
@@ -1843,6 +1953,155 @@
     <div class="inst-matrix-grid" id="inst-factors-container">
       <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 20px;">
         Evaluating 21 institutional filters...
+      </div>
+    </div>
+  </div>
+
+  <!-- 4-PILLAR SIMPLE MASTER STRATEGY & HISTORICAL BACKTEST / AUTO-CORRECTION COCKPIT -->
+  <div class="master-strategy-section">
+    <div class="master-header-row">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">⚡</span>
+          <span style="font-size: 15px; font-weight: 800; color: #F8FAFC; letter-spacing: -0.2px;">
+            4-Pillar Simple Master Strategy & Historical Auto-Correction Engine
+          </span>
+          <span style="font-size: 10px; background: rgba(52, 211, 153, 0.25); color: #34D399; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-family: 'JetBrains Mono';">
+            MASTER CONFLUENCE
+          </span>
+        </div>
+        <div style="font-size: 11px; color: #94A3B8; margin-top: 3px;">
+          Synthesizes all 15+ underlying quantitative strategies into 4 intuitive pillars with candle-by-candle simulation & closed-loop parameter auto-correction.
+        </div>
+      </div>
+
+      <!-- Controls: Symbol Selector & Catalog Toggle -->
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn" style="font-size: 11px; padding: 5px 10px; background: rgba(147, 51, 234, 0.2); border-color: #9333EA; color: #E9D5FF;" onclick="toggleStrategyCatalog()">
+          📚 View 15+ Strategies Catalog
+        </button>
+        <button class="btn btn-primary" style="font-size: 11px; padding: 5px 12px;" onclick="loadMasterStrategy()">
+          🔄 Refresh 4 Pillars
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 Pillars Interactive Display Cards -->
+    <div class="pillars-grid" id="pillars-container">
+      <div class="pillar-card pillar-neutral">
+        <div class="pillar-title">
+          <span>Pillar 1: Directional Bias</span>
+          <span class="inst-factor-badge badge-neutral">EVALUATING</span>
+        </div>
+        <div class="pillar-status" style="color: #38BDF8;">Trend & EMA Slope</div>
+        <div class="pillar-desc">Multi-EMA 9/21/50 stack alignment, Supertrend direction & 3-bar angular slope.</div>
+      </div>
+      <div class="pillar-card pillar-neutral">
+        <div class="pillar-title">
+          <span>Pillar 2: Smart Money Fuel</span>
+          <span class="inst-factor-badge badge-neutral">EVALUATING</span>
+        </div>
+        <div class="pillar-status" style="color: #D8B4FE;">Order Flow & CVD</div>
+        <div class="pillar-desc">Cumulative Volume Delta trend, Bar Delta buyer dominance & Order Block defense.</div>
+      </div>
+      <div class="pillar-card pillar-neutral">
+        <div class="pillar-title">
+          <span>Pillar 3: High-Prob Location</span>
+          <span class="inst-factor-badge badge-neutral">EVALUATING</span>
+        </div>
+        <div class="pillar-status" style="color: #FBBF24;">Pivots & Camarilla</div>
+        <div class="pillar-desc">Camarilla L3/H3 bounce, L4/H4 breakout, CPR boundary & 61.8% Fibonacci zone.</div>
+      </div>
+      <div class="pillar-card pillar-neutral">
+        <div class="pillar-title">
+          <span>Pillar 4: Risk & Chop Gate</span>
+          <span class="inst-factor-badge badge-neutral">EVALUATING</span>
+        </div>
+        <div class="pillar-status" style="color: #34D399;">Chop & 5-Pt Rule</div>
+        <div class="pillar-desc">Choppiness Index &lt; 61.8 filter, min 5.0 expected points move & R:R &gt;= 1.5.</div>
+      </div>
+    </div>
+
+    <!-- Master Recommendation Banner -->
+    <div id="master-decision-banner" class="master-decision-banner">
+      <div>
+        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Simple Master Recommendation</div>
+        <div id="master-rec-title" style="font-size: 18px; font-weight: 900; color: #38BDF8; font-family: 'JetBrains Mono';">
+          ANALYZING CONFLUENCE...
+        </div>
+        <div id="master-rec-rationale" style="font-size: 11px; color: #94A3B8; margin-top: 4px; max-width: 650px;">
+          Evaluating 4 Pillars against live market data across Indian Indices and Commodities.
+        </div>
+      </div>
+      <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <div style="text-align: right;">
+          <div style="font-size: 10px; color: var(--text-muted);">SUGGESTED STRIKE</div>
+          <div id="master-strike" style="font-size: 14px; font-weight: 800; color: #F8FAFC; font-family: 'JetBrains Mono';">--</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 10px; color: var(--text-muted);">ENTRY PRICE</div>
+          <div id="master-entry" style="font-size: 14px; font-weight: 800; color: #38BDF8; font-family: 'JetBrains Mono';">--</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 10px; color: var(--text-muted);">TARGET 1 (+5 PTS)</div>
+          <div id="master-t1" style="font-size: 14px; font-weight: 800; color: #34D399; font-family: 'JetBrains Mono';">--</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 10px; color: var(--text-muted);">STOP LOSS</div>
+          <div id="master-sl" style="font-size: 14px; font-weight: 800; color: #F87171; font-family: 'JetBrains Mono';">--</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 10px; color: var(--text-muted);">EXPECTED GAIN</div>
+          <div id="master-gain" style="font-size: 14px; font-weight: 800; color: #FBBF24; font-family: 'JetBrains Mono';">--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historical Backtesting & Dynamic Parameter Self-Correction Panel -->
+    <div class="backtest-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+        <div style="font-size: 12px; font-weight: 700; color: #F8FAFC; display: flex; align-items: center; gap: 6px;">
+          <span>⏳ Historical Simulation & Closed-Loop Auto-Correction</span>
+          <span style="font-size: 10px; background: rgba(56, 189, 248, 0.2); color: #38BDF8; padding: 1px 6px; border-radius: 3px;">PREVIOUS DATA VALIDATION</span>
+        </div>
+        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+          <select id="bt-symbol" class="select-box" style="padding: 4px 8px; font-size: 11px;">
+            <option value="^NSEI">NIFTY 50 (^NSEI)</option>
+            <option value="^NSEBANK">BANK NIFTY (^NSEBANK)</option>
+            <option value="^BSESN">SENSEX (^BSESN)</option>
+            <option value="CRUDEOIL">CRUDE OIL (MCX)</option>
+            <option value="NATURALGAS">NATURAL GAS (MCX)</option>
+          </select>
+          <select id="bt-period" class="select-box" style="padding: 4px 8px; font-size: 11px;">
+            <option value="5d">Last 5 Days</option>
+            <option value="1mo" selected>Last 1 Month</option>
+            <option value="3mo">Last 3 Months</option>
+          </select>
+          <select id="bt-interval" class="select-box" style="padding: 4px 8px; font-size: 11px;">
+            <option value="15m" selected>15-Min Candles</option>
+            <option value="5m">5-Min Candles</option>
+            <option value="1h">1-Hour Candles</option>
+          </select>
+          <button class="btn btn-primary" style="font-size: 11px; padding: 4px 12px;" onclick="runHistoricalBacktest()">
+            ⚡ Run Simulation & Auto-Correct
+          </button>
+        </div>
+      </div>
+
+      <!-- Backtest Output Box -->
+      <div id="backtest-result-box" style="display: none; padding: 12px; background: #081120; border-radius: 6px; border: 1px solid var(--border-subtle);"></div>
+    </div>
+
+    <!-- Strategies Catalog Modal / Expandable View -->
+    <div id="strategies-catalog-box" style="display: none; margin-top: 14px; border-top: 1px dashed var(--border-subtle); padding-top: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div style="font-size: 13px; font-weight: 700; color: #D8B4FE;">
+          📖 Underlying Quantitative Strategies Catalog (15+ Strategies Synthesized)
+        </div>
+        <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="toggleStrategyCatalog()">Close Catalog</button>
+      </div>
+      <div class="catalog-grid" id="catalog-items-container">
+        <!-- Injected via JS -->
       </div>
     </div>
   </div>
@@ -3740,6 +3999,243 @@
     if (m) m.style.display = 'none';
   }
 
+  // -------------------------------------------------------------------------
+  // 4-Pillar Simple Master Strategy & Historical Backtest Controller
+  // -------------------------------------------------------------------------
+  let currentMasterSymbol = '^NSEI';
+  let strategiesCatalogCached = null;
+
+  async function loadMasterStrategy(sym = null) {
+    if (sym) currentMasterSymbol = sym;
+    else {
+      const activeSym = (typeof selectedInstSymbol !== 'undefined' && selectedInstSymbol) ? selectedInstSymbol : '^NSEI';
+      currentMasterSymbol = activeSym;
+    }
+
+    try {
+      const res = await fetch(`/api/v1/market/strategies/master/${encodeURIComponent(currentMasterSymbol)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      renderMasterStrategy(data);
+    } catch (e) {
+      console.debug('Error loading master strategy:', e);
+    }
+  }
+
+  function renderMasterStrategy(data) {
+    if (!data) return;
+
+    // 1. Render Pillars
+    const pContainer = document.getElementById('pillars-container');
+    if (pContainer && data.pillars) {
+      const p1 = data.pillars.pillar_1 || {};
+      const p2 = data.pillars.pillar_2 || {};
+      const p3 = data.pillars.pillar_3 || {};
+      const p4 = data.pillars.pillar_4 || {};
+
+      pContainer.innerHTML = `
+        <div class="pillar-card ${p1.passed ? 'pillar-pass' : 'pillar-fail'}">
+          <div class="pillar-title">
+            <span>Pillar 1: Directional Bias</span>
+            <span class="inst-factor-badge ${p1.passed ? 'badge-pass' : 'badge-fail'}">${p1.status || 'NEUTRAL'}</span>
+          </div>
+          <div class="pillar-status" style="color: ${p1.status === 'BULLISH' ? '#34D399' : (p1.status === 'BEARISH' ? '#F87171' : '#38BDF8')};">
+            ${p1.supertrend || 'Trend'} • ${p1.ema_stack || 'EMAs'}
+          </div>
+          <div class="pillar-desc">
+            Slope: <b>${p1.ema_slope_val ? (p1.ema_slope_val > 0 ? '+' : '') + Number(p1.ema_slope_val).toFixed(2) : '0.00'}</b> | Alignment: ${p1.status === 'BULLISH' ? 'Upside Stack' : (p1.status === 'BEARISH' ? 'Downside Stack' : 'Mixed')}
+          </div>
+        </div>
+
+        <div class="pillar-card ${p2.passed ? 'pillar-pass' : 'pillar-fail'}">
+          <div class="pillar-title">
+            <span>Pillar 2: Smart Money Fuel</span>
+            <span class="inst-factor-badge ${p2.passed ? 'badge-pass' : 'badge-fail'}">${p2.status || 'NEUTRAL'}</span>
+          </div>
+          <div class="pillar-status" style="color: #D8B4FE;">
+            CVD: ${p2.cvd ? (p2.cvd > 0 ? '+' : '') + Math.round(p2.cvd).toLocaleString() : '0'}
+          </div>
+          <div class="pillar-desc">
+            Buyers: <b>${p2.buyer_dominance_pct || 50}%</b> | Flow: ${p2.flow_trend ? p2.flow_trend.replace(/_/g, ' ') : 'Neutral'} | Defense: ${p2.order_block_defense ? 'Shield Active' : 'Clear'}
+          </div>
+        </div>
+
+        <div class="pillar-card ${p3.passed ? 'pillar-pass' : 'pillar-fail'}">
+          <div class="pillar-title">
+            <span>Pillar 3: High-Prob Location</span>
+            <span class="inst-factor-badge ${p3.passed ? 'badge-pass' : 'badge-fail'}">${p3.status || 'NEUTRAL'}</span>
+          </div>
+          <div class="pillar-status" style="color: #FBBF24;">
+            ${p3.location_bias ? p3.location_bias.replace(/_/g, ' ') : 'Pivots'}
+          </div>
+          <div class="pillar-desc">
+            Camarilla: ${p3.camarilla_range || 'L3-H3'} | Zone: ${p3.demand_supply_zone ? p3.demand_supply_zone.replace(/_/g, ' ') : 'Mid-Range'}
+          </div>
+        </div>
+
+        <div class="pillar-card ${p4.passed ? 'pillar-pass' : 'pillar-fail'}">
+          <div class="pillar-title">
+            <span>Pillar 4: Risk & Chop Gate</span>
+            <span class="inst-factor-badge ${p4.passed ? 'badge-pass' : 'badge-fail'}">${p4.passed ? 'PASSED' : 'CHOPPY'}</span>
+          </div>
+          <div class="pillar-status" style="color: ${p4.passed ? '#34D399' : '#F87171'};">
+            CHOP ${p4.choppiness_index ? Number(p4.choppiness_index).toFixed(1) : '50.0'} (${p4.is_choppy_market ? 'Consolidating' : 'Trend Clean'})
+          </div>
+          <div class="pillar-desc">
+            Min Gain: <b>≥ ${p4.min_points_required || 5} Pts</b> | R:R Target: <b>≥ 1:1.5</b> (${p4.passed ? 'Clean Breakout' : 'Chop Blocked'})
+          </div>
+        </div>
+      `;
+    }
+
+    // 2. Render Decision Banner
+    const recTitle = document.getElementById('master-rec-title');
+    const recRationale = document.getElementById('master-rec-rationale');
+    const strikeEl = document.getElementById('master-strike');
+    const entryEl = document.getElementById('master-entry');
+    const t1El = document.getElementById('master-t1');
+    const slEl = document.getElementById('master-sl');
+    const gainEl = document.getElementById('master-gain');
+
+    if (recTitle) {
+      recTitle.innerText = `${data.recommendation} (${data.confidence_score}%) [${data.pillars_passed_count}/4 PILLARS]`;
+      recTitle.style.color = data.recommendation.includes('CALL') ? '#34D399' : (data.recommendation.includes('PUT') ? '#F87171' : '#38BDF8');
+    }
+    if (recRationale) {
+      recRationale.innerText = data.simple_rationale || 'Evaluating 4-Pillar Simple Master Strategy confluence.';
+    }
+
+    const ts = data.trade_setup || {};
+    if (strikeEl) strikeEl.innerText = ts.suggested_strike || '--';
+    if (entryEl) entryEl.innerText = ts.option_entry_price ? `₹${Number(ts.option_entry_price).toFixed(2)}` : '--';
+    if (t1El) t1El.innerText = ts.option_target_1 ? `₹${Number(ts.option_target_1).toFixed(2)}` : '--';
+    if (slEl) slEl.innerText = ts.option_stop_loss ? `₹${Number(ts.option_stop_loss).toFixed(2)}` : '--';
+    if (gainEl) {
+      gainEl.innerText = ts.expected_move_points ? `+${Number(ts.expected_move_points).toFixed(1)} Pts` : '--';
+      gainEl.style.color = ts.min_5_pts_verified ? '#34D399' : '#FBBF24';
+    }
+  }
+
+  async function runHistoricalBacktest() {
+    const sym = document.getElementById('bt-symbol')?.value || '^NSEI';
+    const period = document.getElementById('bt-period')?.value || '1mo';
+    const interval = document.getElementById('bt-interval')?.value || '15m';
+    const box = document.getElementById('backtest-result-box');
+
+    if (box) {
+      box.style.display = 'block';
+      box.innerHTML = `
+        <div style="text-align: center; color: var(--text-muted); padding: 14px;">
+          ⏳ Simulating historical candle-by-candle executions & self-correcting parameters for <b>${sym}</b>...
+        </div>
+      `;
+    }
+
+    try {
+      const res = await fetch(`/api/v1/market/strategies/backtest/${encodeURIComponent(sym)}?period=${period}&interval=${interval}&min_winrate=70.0`);
+      const data = await res.json();
+
+      if (box && data.performance) {
+        const perf = data.performance;
+        const cal = data.calibrated_parameters || {};
+        const corrections = data.auto_corrections_applied || [];
+
+        let correctionsHtml = '';
+        if (corrections.length > 0) {
+          correctionsHtml = `
+            <div style="margin-top: 10px; padding: 8px 10px; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 6px; font-size: 11px;">
+              <div style="color: #34D399; font-weight: 700; margin-bottom: 4px;">⚡ Closed-Loop Auto-Corrections Applied to Master Engine:</div>
+              ${corrections.map(c => `<div style="color: #E2E8F0; margin-left: 8px;">• ${c}</div>`).join('')}
+            </div>
+          `;
+        }
+
+        box.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+            <div>
+              <span style="font-weight: 800; color: #F8FAFC;">Simulation Dataset: ${data.symbol} (${data.period}, ${data.interval})</span>
+              <span style="font-size: 11px; color: var(--text-muted); margin-left: 8px;">${data.candles_analyzed} Historical Candles Tested</span>
+            </div>
+            <span style="font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; ${data.auto_correction_status === 'OPTIMAL_PERFORMANCE' ? 'background: rgba(52,211,153,0.2); color: #34D399;' : 'background: rgba(56,189,248,0.2); color: #38BDF8;'}">
+              ${data.auto_correction_status}
+            </span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 10px;">
+            <div style="background: #0D1B33; padding: 8px 10px; border-radius: 6px;">
+              <div style="font-size: 10px; color: var(--text-muted);">TOTAL TRADES</div>
+              <div style="font-size: 14px; font-weight: 800; color: #F8FAFC;">${perf.total_trades}</div>
+            </div>
+            <div style="background: #0D1B33; padding: 8px 10px; border-radius: 6px;">
+              <div style="font-size: 10px; color: var(--text-muted);">WIN RATE %</div>
+              <div style="font-size: 14px; font-weight: 800; color: ${perf.win_rate_pct >= 70 ? '#34D399' : '#FBBF24'};">${perf.win_rate_pct}%</div>
+            </div>
+            <div style="background: #0D1B33; padding: 8px 10px; border-radius: 6px;">
+              <div style="font-size: 10px; color: var(--text-muted);">WINNING / LOSING</div>
+              <div style="font-size: 14px; font-weight: 800; color: #38BDF8;">${perf.winning_trades} W / ${perf.losing_trades} L</div>
+            </div>
+            <div style="background: #0D1B33; padding: 8px 10px; border-radius: 6px;">
+              <div style="font-size: 10px; color: var(--text-muted);">TOTAL POINTS GAINED</div>
+              <div style="font-size: 14px; font-weight: 800; color: ${perf.total_points_gained >= 0 ? '#34D399' : '#F87171'};">${perf.total_points_gained > 0 ? '+' : ''}${perf.total_points_gained} Pts</div>
+            </div>
+            <div style="background: #0D1B33; padding: 8px 10px; border-radius: 6px;">
+              <div style="font-size: 10px; color: var(--text-muted);">CALIBRATED CONFIDENCE</div>
+              <div style="font-size: 14px; font-weight: 800; color: #D8B4FE;">≥ ${cal.min_confidence_score}%</div>
+            </div>
+            <div style="background: #0D1B33; padding: 8px 10px; border-radius: 6px;">
+              <div style="font-size: 10px; color: var(--text-muted);">CALIBRATED CHOP LIMIT</div>
+              <div style="font-size: 14px; font-weight: 800; color: #38BDF8;">≤ ${cal.max_chop_index}</div>
+            </div>
+          </div>
+          ${correctionsHtml}
+        `;
+      }
+    } catch (e) {
+      if (box) {
+        box.innerHTML = `<div style="color: #F87171; padding: 10px;">❌ Error running backtest: ${e.message}</div>`;
+      }
+    }
+  }
+
+  async function toggleStrategyCatalog() {
+    const box = document.getElementById('strategies-catalog-box');
+    if (!box) return;
+
+    if (box.style.display === 'none' || box.style.display === '') {
+      box.style.display = 'block';
+      if (!strategiesCatalogCached) {
+        try {
+          const res = await fetch('/api/v1/market/strategies/catalog');
+          const data = await res.json();
+          strategiesCatalogCached = data.strategies || [];
+          renderStrategiesCatalog(strategiesCatalogCached);
+        } catch (e) {
+          console.debug('Error loading catalog:', e);
+        }
+      }
+    } else {
+      box.style.display = 'none';
+    }
+  }
+
+  function renderStrategiesCatalog(strategies) {
+    const container = document.getElementById('catalog-items-container');
+    if (!container || !strategies) return;
+
+    container.innerHTML = strategies.map(s => `
+      <div class="catalog-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 11px; font-weight: 800; color: #38BDF8; font-family: 'JetBrains Mono';">${s.id}: ${s.name}</span>
+          <span style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(168, 85, 247, 0.2); color: #D8B4FE; font-weight: 700;">${s.category}</span>
+        </div>
+        <div style="font-size: 10px; color: #94A3B8; margin-top: 2px;">${s.description}</div>
+        <div style="font-size: 9.5px; color: var(--text-muted); font-family: monospace; margin-top: 3px;">
+          Params: ${JSON.stringify(s.params)}
+        </div>
+      </div>
+    `).join('');
+  }
+
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', () => {
     runRealTimeTick();
@@ -3749,6 +4245,7 @@
     loadInstagramStatus();
     loadAuditData();
     loadLocalStorageStatus();
+    loadMasterStrategy();
   });
 </script>
 

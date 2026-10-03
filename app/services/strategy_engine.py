@@ -10,6 +10,7 @@ from app.services.news_service import news_service
 from app.services.pattern_service import pattern_service
 from app.services.volatility_service import volatility_service
 from app.services.institutional_filter_engine import institutional_filter_engine
+from app.services.institutional_order_flow_service import institutional_order_flow_service
 
 logger = logging.getLogger(__name__)
 
@@ -630,14 +631,41 @@ class StrategyEngine:
             bearish_score += 10
             reasons.append(f"Volume & VWAP: Bearish Distribution Volume ({vol_ratio}x avg) below VWAP (₹{volume_analysis.get('vwap')})")
 
-        # 9d. Order Blocks / SMC (Weight: 15)
-        smc_bias = order_blocks.get("smc_bias")
-        if smc_bias == "AT_DEMAND_ORDER_BLOCK":
+        # 9d. Institutional Order Blocks (Demand/Supply Zones) & Flow Footprint (Weight: 25)
+        inst_flow = institutional_order_flow_service.get_comprehensive_institutional_snapshot(
+            symbol=symbol,
+            df=df_calc,
+            live_price=cur_price,
+            pcr_data=pcr_data,
+        )
+        nearest_bullish_ob = inst_flow.get("nearest_bullish_ob")
+        nearest_bearish_ob = inst_flow.get("nearest_bearish_ob")
+        inst_phase = inst_flow.get("institutional_phase", "NEUTRAL")
+        cvd_val = float(inst_flow.get("cumulative_volume_delta", 0.0))
+        buyer_pct = float(inst_flow.get("buyer_dominance_pct", 50.0))
+        seller_pct = float(inst_flow.get("seller_dominance_pct", 50.0))
+        delta_div = inst_flow.get("delta_divergence", "NONE")
+
+        if nearest_bullish_ob and nearest_bullish_ob.get("in_zone"):
+            bullish_score += 20
+            reasons.append(f"Institutional Order Block: Price reacting inside Bullish Demand Zone (₹{nearest_bullish_ob['zone_bottom']} - ₹{nearest_bullish_ob['zone_top']}) [Status: {nearest_bullish_ob.get('mitigation_status')}]")
+        elif inst_phase in ["INSTITUTIONAL_ACCUMULATION", "INSTITUTIONAL_MARKUP"]:
             bullish_score += 15
-            reasons.append(f"Order Block (SMC): Price reacting in Institutional Demand Zone (₹{order_blocks.get('nearest_bullish_ob', {}).get('ob_zone_bottom')} - ₹{order_blocks.get('nearest_bullish_ob', {}).get('ob_zone_top')})")
-        elif smc_bias == "AT_SUPPLY_ORDER_BLOCK":
+            reasons.append(f"Institutional Flow: {inst_flow.get('phase_badge')} (CVD {cvd_val:+,.0f}, {buyer_pct:.1f}% Buyer Dominance)")
+
+        if nearest_bearish_ob and nearest_bearish_ob.get("in_zone"):
+            bearish_score += 20
+            reasons.append(f"Institutional Order Block: Price reacting inside Bearish Supply Zone (₹{nearest_bearish_ob['zone_bottom']} - ₹{nearest_bearish_ob['zone_top']}) [Status: {nearest_bearish_ob.get('mitigation_status')}]")
+        elif inst_phase in ["INSTITUTIONAL_DISTRIBUTION", "INSTITUTIONAL_MARKDOWN"]:
             bearish_score += 15
-            reasons.append(f"Order Block (SMC): Price reacting in Institutional Supply Zone (₹{order_blocks.get('nearest_bearish_ob', {}).get('ob_zone_bottom')} - ₹{order_blocks.get('nearest_bearish_ob', {}).get('ob_zone_top')})")
+            reasons.append(f"Institutional Flow: {inst_flow.get('phase_badge')} (CVD {cvd_val:+,.0f}, {seller_pct:.1f}% Seller Dominance)")
+
+        if delta_div == "BULLISH_ABSORPTION_DIVERGENCE":
+            bullish_score += 15
+            reasons.append("Delta Divergence: Bullish Absorption - Smart money accumulating dip while CVD expands upward")
+        elif delta_div == "BEARISH_EXHAUSTION_DIVERGENCE":
+            bearish_score += 15
+            reasons.append("Delta Divergence: Bearish Exhaustion - Smart money distributing into retail upside while CVD declines")
 
         # 9e. W & M Patterns (Weight: 20)
         wm_status = wm_patterns.get("status")
@@ -772,29 +800,37 @@ class StrategyEngine:
             signal_type = "BULLISH"
             tag_color = "green"
 
-            # Dynamic Support-Aware Stop Loss (prefer nearest support floor, bounded by 0.6x - 1.5x ATR)
-            supp_dist = cur_price - s_near_val
-            if 0.5 * atr_effective <= supp_dist <= 1.5 * atr_effective:
-                stop_loss = round(s_near_val - (0.05 * atr_effective), 2)
+            # Dynamic Support- & Demand Order Block-Aware Stop Loss
+            ob_supp = nearest_bullish_ob.get("zone_bottom") if nearest_bullish_ob else None
+            if ob_supp and 0.4 * atr_effective <= (cur_price - ob_supp) <= 1.8 * atr_effective:
+                stop_loss = round(ob_supp - (0.05 * atr_effective), 2)
             else:
-                fib_supp = fib.get("nearest_support", cur_price - (1.0 * atr_effective))
-                f_dist = cur_price - fib_supp
-                if 0.6 * atr_effective <= f_dist <= 1.4 * atr_effective:
-                    stop_loss = round(fib_supp - (0.05 * atr_effective), 2)
+                supp_dist = cur_price - s_near_val
+                if 0.5 * atr_effective <= supp_dist <= 1.5 * atr_effective:
+                    stop_loss = round(s_near_val - (0.05 * atr_effective), 2)
                 else:
-                    stop_loss = round(cur_price - (1.0 * atr_effective), 2)
+                    fib_supp = fib.get("nearest_support", cur_price - (1.0 * atr_effective))
+                    f_dist = cur_price - fib_supp
+                    if 0.6 * atr_effective <= f_dist <= 1.4 * atr_effective:
+                        stop_loss = round(fib_supp - (0.05 * atr_effective), 2)
+                    else:
+                        stop_loss = round(cur_price - (1.0 * atr_effective), 2)
 
-            # Dynamic Resistance-Aware Target 1 (align to nearest overhead historical resistance)
-            res_dist = r_near_val - cur_price
-            if 0.8 * atr_effective <= res_dist <= 1.8 * atr_effective:
-                target_1 = round(r_near_val, 2)
+            # Dynamic Resistance- & Supply Order Block-Aware Target 1
+            ob_res_target = nearest_bearish_ob.get("zone_bottom") if nearest_bearish_ob else None
+            if ob_res_target and 0.8 * atr_effective <= (ob_res_target - cur_price) <= 2.2 * atr_effective:
+                target_1 = round(ob_res_target, 2)
             else:
-                fib_res = fib.get("nearest_resistance", cur_price + (1.3 * atr_effective))
-                f_dist = fib_res - cur_price
-                if 0.9 * atr_effective <= f_dist <= 1.6 * atr_effective:
-                    target_1 = round(fib_res, 2)
+                res_dist = r_near_val - cur_price
+                if 0.8 * atr_effective <= res_dist <= 1.8 * atr_effective:
+                    target_1 = round(r_near_val, 2)
                 else:
-                    target_1 = round(cur_price + (1.3 * atr_effective), 2)
+                    fib_res = fib.get("nearest_resistance", cur_price + (1.3 * atr_effective))
+                    f_dist = fib_res - cur_price
+                    if 0.9 * atr_effective <= f_dist <= 1.6 * atr_effective:
+                        target_1 = round(fib_res, 2)
+                    else:
+                        target_1 = round(cur_price + (1.3 * atr_effective), 2)
 
             # Target 2 (align to mid-tier resistance or secondary expansion)
             if r_mid_val > target_1 and (r_mid_val - cur_price) <= 2.8 * atr_effective:
@@ -807,29 +843,37 @@ class StrategyEngine:
             signal_type = "BEARISH"
             tag_color = "red"
 
-            # Dynamic Resistance-Aware Stop Loss (prefer nearest resistance ceiling)
-            res_dist = r_near_val - cur_price
-            if 0.5 * atr_effective <= res_dist <= 1.5 * atr_effective:
-                stop_loss = round(r_near_val + (0.05 * atr_effective), 2)
+            # Dynamic Resistance- & Supply Order Block-Aware Stop Loss
+            ob_res_sl = nearest_bearish_ob.get("zone_top") if nearest_bearish_ob else None
+            if ob_res_sl and 0.4 * atr_effective <= (ob_res_sl - cur_price) <= 1.8 * atr_effective:
+                stop_loss = round(ob_res_sl + (0.05 * atr_effective), 2)
             else:
-                fib_res = fib.get("nearest_resistance", cur_price + (1.0 * atr_effective))
-                f_dist = fib_res - cur_price
-                if 0.6 * atr_effective <= f_dist <= 1.4 * atr_effective:
-                    stop_loss = round(fib_res + (0.05 * atr_effective), 2)
+                res_dist = r_near_val - cur_price
+                if 0.5 * atr_effective <= res_dist <= 1.5 * atr_effective:
+                    stop_loss = round(r_near_val + (0.05 * atr_effective), 2)
                 else:
-                    stop_loss = round(cur_price + (1.0 * atr_effective), 2)
+                    fib_res = fib.get("nearest_resistance", cur_price + (1.0 * atr_effective))
+                    f_dist = fib_res - cur_price
+                    if 0.6 * atr_effective <= f_dist <= 1.4 * atr_effective:
+                        stop_loss = round(fib_res + (0.05 * atr_effective), 2)
+                    else:
+                        stop_loss = round(cur_price + (1.0 * atr_effective), 2)
 
-            # Dynamic Support-Aware Target 1 (align to nearest underlying historical support)
-            supp_dist = cur_price - s_near_val
-            if 0.8 * atr_effective <= supp_dist <= 1.8 * atr_effective:
-                target_1 = round(s_near_val, 2)
+            # Dynamic Support- & Demand Order Block-Aware Target 1
+            ob_supp_target = nearest_bullish_ob.get("zone_top") if nearest_bullish_ob else None
+            if ob_supp_target and 0.8 * atr_effective <= (cur_price - ob_supp_target) <= 2.2 * atr_effective:
+                target_1 = round(ob_supp_target, 2)
             else:
-                fib_supp = fib.get("nearest_support", cur_price - (1.3 * atr_effective))
-                f_dist = cur_price - fib_supp
-                if 0.9 * atr_effective <= f_dist <= 1.6 * atr_effective:
-                    target_1 = round(fib_supp, 2)
+                supp_dist = cur_price - s_near_val
+                if 0.8 * atr_effective <= supp_dist <= 1.8 * atr_effective:
+                    target_1 = round(s_near_val, 2)
                 else:
-                    target_1 = round(cur_price - (1.3 * atr_effective), 2)
+                    fib_supp = fib.get("nearest_support", cur_price - (1.3 * atr_effective))
+                    f_dist = cur_price - fib_supp
+                    if 0.9 * atr_effective <= f_dist <= 1.6 * atr_effective:
+                        target_1 = round(fib_supp, 2)
+                    else:
+                        target_1 = round(cur_price - (1.3 * atr_effective), 2)
 
             # Target 2 (align to mid-tier support or secondary expansion)
             if s_mid_val < target_1 and (cur_price - s_mid_val) <= 2.8 * atr_effective:
@@ -996,6 +1040,7 @@ class StrategyEngine:
             "wm_patterns": wm_patterns,
             "price_action_momentum": pa_momentum,
             "multi_timeframe_sr": multi_sr,
+            "institutional_order_flow": inst_flow,
         }
 
         # 4. 21-FACTOR INSTITUTIONAL CONFLUENCE MATRIX
@@ -1049,6 +1094,24 @@ class StrategyEngine:
                 "fail_count": 0,
                 "confluence_percentage": 0.0,
                 "factors": [],
+            }
+
+        # 4-Pillar Simple Master Strategy Synthesis
+        try:
+            from app.services.unified_strategy_service import unified_strategy_service
+            master_eval = unified_strategy_service.evaluate_simple_master_strategy(
+                symbol=symbol,
+                df=df_calc,
+                live_price=cur_price,
+                pcr_data=pcr_data if isinstance(pcr_data, dict) else {},
+            )
+            final_result["master_strategy"] = master_eval
+        except Exception as e:
+            logger.warning(f"Error evaluating simple master strategy: {e}")
+            final_result["master_strategy"] = {
+                "recommendation": recommendation,
+                "confidence_score": confidence,
+                "simple_rationale": "Multi-factor confluence strategy active",
             }
 
         sanitized = self.sanitize_obj(final_result)

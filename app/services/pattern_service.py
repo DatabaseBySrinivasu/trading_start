@@ -1392,6 +1392,41 @@ class PatternService:
             "description": conf_desc,
         }
 
+    @classmethod
+    def calculate_camarilla_levels(
+        cls,
+        df: Optional[pd.DataFrame] = None,
+        high: float = 0.0,
+        low: float = 0.0,
+        close: float = 0.0,
+        cur_price: float = 0.0,
+    ) -> Dict[str, Any]:
+        """Convenience wrapper for Camarilla pivots accepting DataFrame or scalar values."""
+        if df is not None and not df.empty:
+            df_c = cls._clean_df(df)
+            h = float(df_c["high"].max()) if len(df_c) <= 5 else float(df_c["high"].iloc[-1])
+            l = float(df_c["low"].min()) if len(df_c) <= 5 else float(df_c["low"].iloc[-1])
+            c = float(df_c["close"].iloc[-1])
+            cp = cur_price if cur_price > 0 else c
+            return cls.calculate_camarilla_pivots(h, l, c, cp)
+        return cls.calculate_camarilla_pivots(high, low, close, cur_price)
+
+    @classmethod
+    def calculate_multi_timeframe_sr_confluence(
+        cls,
+        df: Optional[pd.DataFrame] = None,
+        df_daily: Optional[pd.DataFrame] = None,
+        df_weekly: Optional[pd.DataFrame] = None,
+        symbol: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Convenience wrapper for calculate_multi_timeframe_sr."""
+        return cls.calculate_multi_timeframe_sr(
+            df_intraday=df,
+            df_daily=df_daily,
+            df_weekly=df_weekly,
+            symbol=symbol,
+        )
+
     def run_full_pattern_scan(
         self,
         df: pd.DataFrame,

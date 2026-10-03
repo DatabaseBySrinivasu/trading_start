@@ -176,6 +176,28 @@ class TelegramService:
         ob = sig.get("order_blocks", {})
         smc_bias = str(ob.get("smc_bias", "NEUTRAL RANGE")).replace("_", " ")
 
+        # Institutional Order Flow & Order Blocks
+        iof = sig.get("institutional_order_flow", {})
+        inst_phase_badge = str(iof.get("phase_badge", "")).replace("_", " ")
+        buyer_pct = float(iof.get("buyer_dominance_pct", 50.0))
+        cvd_val = float(iof.get("cumulative_volume_delta", 0.0))
+        delta_div = str(iof.get("delta_divergence", "NONE")).replace("_", " ")
+        nearest_bull = iof.get("nearest_bullish_ob")
+        nearest_bear = iof.get("nearest_bearish_ob")
+
+        ob_detail_lines = []
+        if "CALL" in rec_clean and nearest_bull:
+            ob_detail_lines.append(f"  📦 <b>Order Block (Demand):</b> ₹{nearest_bull.get('zone_bottom')} - ₹{nearest_bull.get('zone_top')} [{nearest_bull.get('mitigation_status', 'ACTIVE')}]")
+        elif "PUT" in rec_clean and nearest_bear:
+            ob_detail_lines.append(f"  📦 <b>Order Block (Supply):</b> ₹{nearest_bear.get('zone_bottom')} - ₹{nearest_bear.get('zone_top')} [{nearest_bear.get('mitigation_status', 'ACTIVE')}]")
+
+        if inst_phase_badge and inst_phase_badge != "NEUTRAL":
+            ob_detail_lines.append(f"  🏛️ <b>Institutional Flow:</b> {html.escape(inst_phase_badge)} (CVD: {cvd_val:+,.0f} | {buyer_pct:.0f}% Buyers)")
+        if delta_div and delta_div != "NONE" and "CONVERGENCE" not in delta_div:
+            ob_detail_lines.append(f"  ⚖️ <b>Delta Divergence:</b> {html.escape(delta_div)}")
+
+        inst_flow_section = ("\n".join(ob_detail_lines) + "\n") if ob_detail_lines else ""
+
         # Key Technical Factors
         reasons = sig.get("confluence_reasons", [])
         factors_lines = []
@@ -239,7 +261,8 @@ class TelegramService:
             f"🔥 <b>CONFLUENCE SIGNALS (Score: {conf_score:.1f}%):</b>\n"
             f"  ⚡️ <b>Momentum:</b> {html.escape(mom_regime)} ({mom_score_str})\n"
             f"  📊 <b>PCR (OI):</b> {html.escape(pcr_val_str)} ({html.escape(pcr_sent)})\n"
-            f"  🏛️ <b>SMC Bias:</b> {html.escape(smc_bias)}\n\n"
+            f"  🏛️ <b>SMC Bias:</b> {html.escape(smc_bias)}\n"
+            f"{inst_flow_section}"
             f"💡 <b>Key Technical Factors:</b>\n"
             f"{factors_text}\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
