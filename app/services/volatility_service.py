@@ -1,7 +1,7 @@
 import math
 import time
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 import yfinance as yf
 import pandas as pd
 from app.services.market_data import market_data_service

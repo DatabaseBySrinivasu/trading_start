@@ -360,7 +360,7 @@ class MarketDataService:
             return canonical
         if canonical.endswith("=F") or canonical.endswith("=X"):
             return canonical
-        if canonical in ["INDA", "EPI", "SPY", "QQQ"]:
+        if canonical in ["INDA", "EPI", "SPY", "QQQ", "GIFT_NIFTY"]:
             return canonical
         if canonical.endswith(".NS") or canonical.endswith(".BO"):
             return canonical
