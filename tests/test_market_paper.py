@@ -302,4 +302,84 @@ def test_strike_price_accuracy_and_alias_resolution(client):
     assert d_crude["lot_size"] == 100
 
 
+def test_index_level_paper_trading_execution(client):
+    """Test full multi-asset Index-level paper trading with Long/Short, lot multipliers and margin."""
+    # 1. Reset portfolio first with ₹5,00,000 capital
+    reset_res = client.post("/api/v1/paper/reset", json={"initial_balance": 500000.0})
+    assert reset_res.status_code == 200
+    r_data = reset_res.json()
+    assert r_data["success"] is True
+    assert r_data["available_cash"] == 500000.0
+
+    # 2. Place LONG order on NIFTY 50 (1 lot = 65 qty)
+    long_res = client.post("/api/v1/paper/order", json={
+        "symbol": "^NSEI",
+        "side": "LONG",
+        "asset_type": "INDEX",
+        "lots": 1,
+        "price": 24500.0,
+        "target_1": 24550.0,
+        "target_2": 24600.0,
+        "stop_loss": 24450.0,
+        "notes": "Test NIFTY Long Level"
+    })
+    assert long_res.status_code == 200
+    long_data = long_res.json()
+    assert long_data["success"] is True
+    assert long_data["position"]["symbol"] == "^NSEI"
+    assert long_data["position"]["quantity"] == 65
+    assert long_data["position"]["side"] == "LONG"
+    assert long_data["position"]["margin_used"] == (65 * 24500.0) * 0.10
+
+    # 3. Place SHORT order on SENSEX (1 lot = 20 qty)
+    short_res = client.post("/api/v1/paper/order", json={
+        "symbol": "^BSESN",
+        "side": "SHORT",
+        "asset_type": "INDEX",
+        "lots": 1,
+        "price": 80000.0,
+        "target_1": 79800.0,
+        "target_2": 79600.0,
+        "stop_loss": 80150.0,
+        "notes": "Test SENSEX Short Level"
+    })
+    assert short_res.status_code == 200
+    short_data = short_res.json()
+    assert short_data["success"] is True
+    assert short_data["position"]["quantity"] == 20
+    assert short_data["position"]["side"] == "SHORT"
+
+    # 4. Check portfolio summary with open positions
+    port_res = client.get("/api/v1/paper/portfolio")
+    assert port_res.status_code == 200
+    port = port_res.json()
+    assert len(port["positions"]) == 2
+    assert port["margin_used"] > 0
+    assert port["available_cash"] < 500000.0
+
+    # 5. Reverse NIFTY position (Long -> Short)
+    rev_res = client.post("/api/v1/paper/reverse", json={"symbol": "^NSEI"})
+    assert rev_res.status_code == 200
+    rev_data = rev_res.json()
+    assert rev_data["success"] is True
+    assert rev_data["new_position"]["side"] == "SHORT"
+
+    # 6. Close SENSEX position
+    close_res = client.post("/api/v1/paper/close", json={"symbol": "^BSESN", "price": 79900.0})
+    assert close_res.status_code == 200
+    close_data = close_res.json()
+    assert close_data["success"] is True
+    assert close_data["realized_pnl"] == (80000.0 - 79900.0) * 20  # +2000 INR on short profit
+
+    # 7. Check lot sizes endpoint
+    lots_res = client.get("/api/v1/paper/lot-sizes")
+    assert lots_res.status_code == 200
+    lots_data = lots_res.json()
+    assert lots_data["indices"]["NIFTY 50"] == 65
+    assert lots_data["indices"]["SENSEX"] == 20
+    assert lots_data["indices"]["BANK NIFTY"] == 30
+    assert lots_data["commodities"]["CRUDE OIL (Brent)"]["lot_size"] == 100
+    assert lots_data["commodities"]["NATURAL GAS (HH)"]["lot_size"] == 1250
+
+
 

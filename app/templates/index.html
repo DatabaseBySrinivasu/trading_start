@@ -1093,6 +1093,102 @@
       line-height: 1.35;
     }
 
+    /* Multi-Timeframe Support & Resistance Cockpit */
+    .sr-cockpit-section {
+      background: linear-gradient(180deg, #091322 0%, #050B15 100%);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    .sr-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .sr-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .sr-kpi-card {
+      background: #070D1A;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .sr-kpi-title {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .sr-kpi-val {
+      font-size: 14px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .sr-matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 12px;
+    }
+
+    .sr-detail-card {
+      background: #080E1C;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sr-detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      border-bottom: 1px dashed var(--border-subtle);
+      padding-bottom: 6px;
+    }
+
+    .sr-level-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      padding: 2px 0;
+    }
+
+    .sr-level-name {
+      color: #94A3B8;
+      font-weight: 600;
+    }
+
+    .sr-level-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+    }
+
     /* 4-Pillar Simple Master Strategy & Backtest Cockpit */
     .master-strategy-section {
       background: linear-gradient(180deg, #091528 0%, #050B18 100%);
@@ -1292,6 +1388,54 @@
       border: none;
     }
     .modal-close:hover { color: white; }
+
+    /* Paper Trading Simulator Specific Styles */
+    .paper-tab-btn {
+      flex: 1;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 5px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    .paper-tab-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      color: #38BDF8;
+      border-color: rgba(56, 189, 248, 0.5);
+      font-weight: 800;
+    }
+    .paper-preset-chip {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border-subtle);
+      color: #CBD5E1;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 2px 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .paper-preset-chip:hover {
+      border-color: #38BDF8;
+      color: #38BDF8;
+      background: rgba(56, 189, 248, 0.15);
+    }
+    .pos-side-badge {
+      font-size: 9px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 2px 5px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    .pos-side-long { background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .pos-side-short { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.4); }
   </style>
 </head>
 <body>
@@ -1616,10 +1760,18 @@
         <li>Scanning Candlesticks, SMC Order Blocks, Day Levels, CPR, Momentum & News...</li>
       </ul>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;">
-        <button class="btn" style="font-size: 11px; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); color: #38BDF8; font-weight: 700; justify-content: center;" onclick="sendSignalToTelegram('^NSEI')">
+        <button class="btn btn-green" style="font-size: 11px; padding: 5px 6px; justify-content: center; font-weight: 800;" onclick="prefillIndexTrade('^NSEI', 'LONG', 1)" title="Open Paper Trade position on NIFTY 50 Index Level (1 Lot = 65 Qty)">
+          ⚡ Trade NIFTY Index
+        </button>
+        <button class="btn" style="font-size: 11px; padding: 5px 6px; justify-content: center; font-weight: 800; background: rgba(168, 85, 247, 0.2); color: #D8B4FE; border-color: rgba(168, 85, 247, 0.4);" onclick="prefillOptionFromCard('^NSEI')" title="Open Paper Trade on suggested NIFTY Strike">
+          🎯 Trade Strike
+        </button>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+        <button class="btn" style="font-size: 10px; padding: 3px 6px; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); color: #38BDF8; font-weight: 700; justify-content: center;" onclick="sendSignalToTelegram('^NSEI')">
           📱 Telegram
         </button>
-        <button class="btn" style="font-size: 11px; background: rgba(225, 48, 108, 0.15); border-color: rgba(225, 48, 108, 0.4); color: #FB7185; font-weight: 700; justify-content: center;" onclick="sendSignalToInstagram('^NSEI')">
+        <button class="btn" style="font-size: 10px; padding: 3px 6px; background: rgba(225, 48, 108, 0.15); border-color: rgba(225, 48, 108, 0.4); color: #FB7185; font-weight: 700; justify-content: center;" onclick="sendSignalToInstagram('^NSEI')">
           📸 Instagram
         </button>
       </div>
@@ -1737,10 +1889,18 @@
         <li>Scanning Candlesticks, SMC Order Blocks, Day Levels, CPR, Momentum & News...</li>
       </ul>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;">
-        <button class="btn" style="font-size: 11px; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); color: #38BDF8; font-weight: 700; justify-content: center;" onclick="sendSignalToTelegram('^NSEBANK')">
+        <button class="btn btn-green" style="font-size: 11px; padding: 5px 6px; justify-content: center; font-weight: 800;" onclick="prefillIndexTrade('^NSEBANK', 'LONG', 1)" title="Open Paper Trade position on BANK NIFTY Index Level (1 Lot = 30 Qty)">
+          ⚡ Trade BANKNIFTY
+        </button>
+        <button class="btn" style="font-size: 11px; padding: 5px 6px; justify-content: center; font-weight: 800; background: rgba(168, 85, 247, 0.2); color: #D8B4FE; border-color: rgba(168, 85, 247, 0.4);" onclick="prefillOptionFromCard('^NSEBANK')" title="Open Paper Trade on suggested BANK NIFTY Strike">
+          🎯 Trade Strike
+        </button>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+        <button class="btn" style="font-size: 10px; padding: 3px 6px; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); color: #38BDF8; font-weight: 700; justify-content: center;" onclick="sendSignalToTelegram('^NSEBANK')">
           📱 Telegram
         </button>
-        <button class="btn" style="font-size: 11px; background: rgba(225, 48, 108, 0.15); border-color: rgba(225, 48, 108, 0.4); color: #FB7185; font-weight: 700; justify-content: center;" onclick="sendSignalToInstagram('^NSEBANK')">
+        <button class="btn" style="font-size: 10px; padding: 3px 6px; background: rgba(225, 48, 108, 0.15); border-color: rgba(225, 48, 108, 0.4); color: #FB7185; font-weight: 700; justify-content: center;" onclick="sendSignalToInstagram('^NSEBANK')">
           📸 Instagram
         </button>
       </div>
@@ -1858,10 +2018,18 @@
         <li>Scanning Candlesticks, SMC Order Blocks, Day Levels, CPR, Momentum & News...</li>
       </ul>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;">
-        <button class="btn" style="font-size: 11px; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); color: #38BDF8; font-weight: 700; justify-content: center;" onclick="sendSignalToTelegram('^BSESN')">
+        <button class="btn btn-green" style="font-size: 11px; padding: 5px 6px; justify-content: center; font-weight: 800;" onclick="prefillIndexTrade('^BSESN', 'LONG', 1)" title="Open Paper Trade position on SENSEX Index Level (1 Lot = 20 Qty)">
+          ⚡ Trade SENSEX Index
+        </button>
+        <button class="btn" style="font-size: 11px; padding: 5px 6px; justify-content: center; font-weight: 800; background: rgba(168, 85, 247, 0.2); color: #D8B4FE; border-color: rgba(168, 85, 247, 0.4);" onclick="prefillOptionFromCard('^BSESN')" title="Open Paper Trade on suggested SENSEX Strike">
+          🎯 Trade Strike
+        </button>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+        <button class="btn" style="font-size: 10px; padding: 3px 6px; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); color: #38BDF8; font-weight: 700; justify-content: center;" onclick="sendSignalToTelegram('^BSESN')">
           📱 Telegram
         </button>
-        <button class="btn" style="font-size: 11px; background: rgba(225, 48, 108, 0.15); border-color: rgba(225, 48, 108, 0.4); color: #FB7185; font-weight: 700; justify-content: center;" onclick="sendSignalToInstagram('^BSESN')">
+        <button class="btn" style="font-size: 10px; padding: 3px 6px; background: rgba(225, 48, 108, 0.15); border-color: rgba(225, 48, 108, 0.4); color: #FB7185; font-weight: 700; justify-content: center;" onclick="sendSignalToInstagram('^BSESN')">
           📸 Instagram
         </button>
       </div>
@@ -1953,6 +2121,168 @@
     <div class="inst-matrix-grid" id="inst-factors-container">
       <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 20px;">
         Evaluating 21 institutional filters...
+      </div>
+    </div>
+  </div>
+
+  <!-- UNIFIED MULTI-TIMEFRAME SUPPORT & RESISTANCE COCKPIT -->
+  <div class="sr-cockpit-section" id="sr-cockpit-section">
+    <div class="sr-header-row">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">🧱</span>
+          <span style="font-size: 15px; font-weight: 800; color: #F8FAFC; letter-spacing: -0.2px;">
+            Multi-Timeframe Support & Resistance Cockpit & Confluence Radar
+          </span>
+          <span style="font-size: 10px; background: rgba(56, 189, 248, 0.25); color: #38BDF8; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-family: 'JetBrains Mono';">
+            MULTI-TIMEFRAME LEVELS
+          </span>
+        </div>
+        <div style="font-size: 11px; color: #94A3B8; margin-top: 3px;">
+          Unified algorithmic hierarchy aggregating CPR (Daily/Weekly), Camarilla Pivots (H1-H5/L1-L5), Multi-Day Extremes (PDH/PDL/PWH/PWL), Derivative Strike OI Walls, and SMC Demand/Supply Order Blocks.
+        </div>
+      </div>
+
+      <!-- Instrument Selector Tabs -->
+      <div class="inst-symbol-pills">
+        <button class="inst-sym-btn active" id="sr-tab-NSEI" onclick="selectSrSymbol('^NSEI')">NIFTY 50</button>
+        <button class="inst-sym-btn" id="sr-tab-NSEBANK" onclick="selectSrSymbol('^NSEBANK')">BANK NIFTY</button>
+        <button class="inst-sym-btn" id="sr-tab-BSESN" onclick="selectSrSymbol('^BSESN')">SENSEX</button>
+        <button class="inst-sym-btn" id="sr-tab-CRUDEOIL" onclick="selectSrSymbol('CRUDEOIL')">CRUDE OIL (MCX)</button>
+        <button class="inst-sym-btn" id="sr-tab-NATURALGAS" onclick="selectSrSymbol('NATURALGAS')">NATURAL GAS (MCX)</button>
+        <button class="inst-sym-btn" id="sr-tab-GOLD" onclick="selectSrSymbol('GOLD')">GOLD 999 (MCX)</button>
+      </div>
+    </div>
+
+    <!-- S/R KPI Cards -->
+    <div class="sr-kpi-grid">
+      <div class="sr-kpi-card">
+        <div class="sr-kpi-title">🚀 Near Resistance (R1)</div>
+        <div class="sr-kpi-val" style="color: #F87171;" id="sr-kpi-r1">₹--</div>
+        <div style="font-size: 10px; color: var(--text-muted);" id="sr-kpi-r1-dist">+-- pts (+--%)</div>
+      </div>
+      <div class="sr-kpi-card">
+        <div class="sr-kpi-title">🛡️ Near Support (S1)</div>
+        <div class="sr-kpi-val" style="color: #34D399;" id="sr-kpi-s1">₹--</div>
+        <div style="font-size: 10px; color: var(--text-muted);" id="sr-kpi-s1-dist">--- pts (--%)</div>
+      </div>
+      <div class="sr-kpi-card">
+        <div class="sr-kpi-title">📐 Daily CPR</div>
+        <div class="sr-kpi-val" style="color: #38BDF8;" id="sr-kpi-cpr-type">-- CPR</div>
+        <div style="font-size: 10px; color: var(--text-muted);" id="sr-kpi-cpr-vals">TC: -- | P: -- | BC: --</div>
+      </div>
+      <div class="sr-kpi-card">
+        <div class="sr-kpi-title">⚡ Camarilla Bounds</div>
+        <div class="sr-kpi-val" style="color: #FBBF24;" id="sr-kpi-cam-status">--</div>
+        <div style="font-size: 10px; color: var(--text-muted);" id="sr-kpi-cam-h4l4">H4: -- | L4: --</div>
+      </div>
+      <div class="sr-kpi-card">
+        <div class="sr-kpi-title">📊 Derivative OI Walls</div>
+        <div class="sr-kpi-val" style="color: #D8B4FE;" id="sr-kpi-oi-walls">--</div>
+        <div style="font-size: 10px; color: var(--text-muted);" id="sr-kpi-max-pain">Max Pain: ₹--</div>
+      </div>
+      <div class="sr-kpi-card">
+        <div class="sr-kpi-title">🏛️ SMC Order Blocks</div>
+        <div class="sr-kpi-val" style="color: #A78BFA;" id="sr-kpi-smc-zones">--</div>
+        <div style="font-size: 10px; color: var(--text-muted);" id="sr-kpi-smc-bias">Institutional Zones</div>
+      </div>
+    </div>
+
+    <!-- S/R Detailed Breakdown Grid -->
+    <div class="sr-matrix-grid" id="sr-breakdown-container">
+      <!-- 1. Consolidated S/R Hierarchy -->
+      <div class="sr-detail-card">
+        <div class="sr-detail-header">
+          <span style="color: #38BDF8;">🧱 S/R Hierarchy & Confluence</span>
+          <span class="inst-factor-badge badge-pass" id="sr-hierarchy-status">LIVE</span>
+        </div>
+        <div id="sr-hierarchy-rows">
+          <div class="sr-level-row"><span class="sr-level-name">R3 Major Ceiling:</span> <span class="sr-level-price" style="color: #F87171;" id="srh-r3">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">R2 Mid Resistance:</span> <span class="sr-level-price" style="color: #F87171;" id="srh-r2">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">R1 Near Resistance:</span> <span class="sr-level-price" style="color: #F87171;" id="srh-r1">--</span></div>
+          <div class="sr-level-row" style="background: rgba(56, 189, 248, 0.1); padding: 4px; border-radius: 4px;"><span class="sr-level-name" style="color: #38BDF8; font-weight: 800;">📍 Current Spot LTP:</span> <span class="sr-level-price" style="color: #F8FAFC; font-weight: 800;" id="srh-spot">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">S1 Near Support:</span> <span class="sr-level-price" style="color: #34D399;" id="srh-s1">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">S2 Mid Support:</span> <span class="sr-level-price" style="color: #34D399;" id="srh-s2">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">S3 Major Floor:</span> <span class="sr-level-price" style="color: #34D399;" id="srh-s3">--</span></div>
+        </div>
+      </div>
+
+      <!-- 2. Daily & Weekly Central Pivot Range (CPR) -->
+      <div class="sr-detail-card">
+        <div class="sr-detail-header">
+          <span style="color: #38BDF8;">📐 Central Pivot Range (CPR)</span>
+          <span class="inst-factor-badge badge-pass" id="sr-cpr-badge">DAILY & WEEKLY</span>
+        </div>
+        <div id="sr-cpr-rows">
+          <div class="sr-level-row"><span class="sr-level-name">Daily Top Central (TC):</span> <span class="sr-level-price" id="srcpr-d-tc">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Daily Central Pivot (P):</span> <span class="sr-level-price" style="color: #FBBF24;" id="srcpr-d-p">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Daily Bottom Central (BC):</span> <span class="sr-level-price" id="srcpr-d-bc">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Daily CPR Width:</span> <span class="sr-level-price" style="color: #38BDF8;" id="srcpr-d-width">--%</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Weekly Pivot Range:</span> <span class="sr-level-price" id="srcpr-w-p">P: -- | TC: -- | BC: --</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">CPR Expectation:</span> <span class="sr-level-price" style="color: #34D399;" id="srcpr-d-exp">--</span></div>
+        </div>
+      </div>
+
+      <!-- 3. Camarilla Pivot System -->
+      <div class="sr-detail-card">
+        <div class="sr-detail-header">
+          <span style="color: #38BDF8;">⚡ Camarilla Pivot System</span>
+          <span class="inst-factor-badge badge-watch" id="sr-cam-badge">BREAKOUT LEVELS</span>
+        </div>
+        <div id="sr-cam-rows">
+          <div class="sr-level-row"><span class="sr-level-name">H5 Extreme Expansion:</span> <span class="sr-level-price" style="color: #F87171;" id="srcam-h5">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">H4 Bullish Breakout:</span> <span class="sr-level-price" style="color: #F87171; font-weight: 800;" id="srcam-h4">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">H3 Short Reversal Level:</span> <span class="sr-level-price" style="color: #FBBF24;" id="srcam-h3">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">L3 Long Bounce Level:</span> <span class="sr-level-price" style="color: #FBBF24;" id="srcam-l3">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">L4 Bearish Breakdown:</span> <span class="sr-level-price" style="color: #34D399; font-weight: 800;" id="srcam-l4">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">L5 Extreme Expansion:</span> <span class="sr-level-price" style="color: #34D399;" id="srcam-l5">--</span></div>
+        </div>
+      </div>
+
+      <!-- 4. Multi-Day Historical Extremes -->
+      <div class="sr-detail-card">
+        <div class="sr-detail-header">
+          <span style="color: #38BDF8;">📅 Multi-Day Historical Extremes</span>
+          <span class="inst-factor-badge badge-neutral" id="sr-extremes-badge">PDH/PDL & MULTI-DAY</span>
+        </div>
+        <div id="sr-extremes-rows">
+          <div class="sr-level-row"><span class="sr-level-name">Previous Day High (PDH):</span> <span class="sr-level-price" style="color: #F87171;" id="sre-pdh">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Previous Day Low (PDL):</span> <span class="sr-level-price" style="color: #34D399;" id="sre-pdl">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Previous Day Close (PDC):</span> <span class="sr-level-price" id="sre-pdc">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">2-Day Range (2DH / 2DL):</span> <span class="sr-level-price" id="sre-2d">-- / --</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">5-Day / Week (5DH / 5DL):</span> <span class="sr-level-price" id="sre-5d">-- / --</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">20-Day / Month (20DH / 20DL):</span> <span class="sr-level-price" id="sre-20d">-- / --</span></div>
+        </div>
+      </div>
+
+      <!-- 5. Derivative Strike Barriers (Max Call/Put OI & Max Pain) -->
+      <div class="sr-detail-card">
+        <div class="sr-detail-header">
+          <span style="color: #38BDF8;">📊 Derivative OI Barriers & Max Pain</span>
+          <span class="inst-factor-badge badge-pass" id="sr-oi-badge">OPEN INTEREST</span>
+        </div>
+        <div id="sr-oi-rows">
+          <div class="sr-level-row"><span class="sr-level-name">Max Call OI (Ceiling Resistance):</span> <span class="sr-level-price" style="color: #F87171;" id="sroi-call-oi">₹--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Max Put OI (Floor Support):</span> <span class="sr-level-price" style="color: #34D399;" id="sroi-put-oi">₹--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Max Pain Gravitational Strike:</span> <span class="sr-level-price" style="color: #FBBF24; font-weight: 800;" id="sroi-max-pain">₹--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">PCR (OI) Ratio:</span> <span class="sr-level-price" style="color: #38BDF8;" id="sroi-pcr">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Institutional Writers Bias:</span> <span class="sr-level-price" id="sroi-bias">--</span></div>
+        </div>
+      </div>
+
+      <!-- 6. Macro Fibonacci Retracements & SMC Zones -->
+      <div class="sr-detail-card">
+        <div class="sr-detail-header">
+          <span style="color: #38BDF8;">🌀 Fibonacci & SMC Order Blocks</span>
+          <span class="inst-factor-badge badge-pass" id="sr-fib-badge">GOLDEN POCKET</span>
+        </div>
+        <div id="sr-fib-rows">
+          <div class="sr-level-row"><span class="sr-level-name">Golden Pocket (61.8%):</span> <span class="sr-level-price" style="color: #FBBF24; font-weight: 800;" id="srfib-618">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Equilibrium (50.0% Median):</span> <span class="sr-level-price" id="srfib-500">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Deep Pullback (78.6%):</span> <span class="sr-level-price" id="srfib-786">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Active Demand OB (Zone):</span> <span class="sr-level-price" style="color: #34D399;" id="srsmc-demand">--</span></div>
+          <div class="sr-level-row"><span class="sr-level-name">Active Supply OB (Zone):</span> <span class="sr-level-price" style="color: #F87171;" id="srsmc-supply">--</span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2150,50 +2480,124 @@
       </div>
     </div>
 
-    <!-- Right Column: Paper Trader Simulator & Matrix -->
+    <!-- Right Column: Multi-Asset & Index-Level Paper Trader Simulator -->
     <div>
       <div class="card" style="margin-bottom: 20px;">
         <div class="section-title">
-          <span>💼 100% Free Paper Trading Simulator</span>
-          <span class="signal-tag signal-buy">Live Portfolio</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>💼 Institutional Paper Trading Simulator</span>
+            <span class="signal-tag signal-buy" style="font-size: 10px; padding: 2px 7px;">Index & Options</span>
+          </div>
+          <button class="btn" style="padding: 2px 8px; font-size: 10px; border-color: rgba(239, 68, 68, 0.4); color: #F87171;" onclick="resetPaperPortfolio()" title="Reset virtual capital back to ₹1,00,000">
+            🔄 Reset
+          </button>
         </div>
 
-        <div style="background: var(--bg-input); border-radius: 8px; padding: 10px; margin-bottom: 8px;">
-          <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Available Virtual Cash</div>
-          <div style="font-size: 17px; font-weight: 800; font-family: 'JetBrains Mono';" id="port-cash">₹100,000.00</div>
+        <!-- KPI Portfolio Grid -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 8px;">
+          <div style="background: var(--bg-input); border-radius: 8px; padding: 8px 10px;">
+            <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Available Virtual Cash</div>
+            <div style="font-size: 15px; font-weight: 800; font-family: 'JetBrains Mono';" id="port-cash">₹100,000.00</div>
+          </div>
+          <div style="background: var(--bg-input); border-radius: 8px; padding: 8px 10px;">
+            <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Total Portfolio Value</div>
+            <div style="font-size: 15px; font-weight: 800; font-family: 'JetBrains Mono';" id="port-value">₹100,000.00</div>
+          </div>
+          <div style="background: var(--bg-input); border-radius: 8px; padding: 8px 10px;">
+            <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Margin Utilized</div>
+            <div style="font-size: 13px; font-weight: 800; font-family: 'JetBrains Mono'; color: #38BDF8;" id="port-margin">₹0.00</div>
+          </div>
+          <div style="background: var(--bg-input); border-radius: 8px; padding: 8px 10px;">
+            <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Net P&L / Win Rate</div>
+            <div style="font-size: 13px; font-weight: 800; font-family: 'JetBrains Mono';" id="port-pnl">₹0.00 (0.0%)</div>
+          </div>
         </div>
 
-        <div style="background: var(--bg-input); border-radius: 8px; padding: 10px; margin-bottom: 12px;">
-          <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Total Portfolio Value</div>
-          <div style="font-size: 17px; font-weight: 800; font-family: 'JetBrains Mono';" id="port-value">₹100,000.00</div>
+        <!-- Asset Type Selector Tabs -->
+        <div style="display: flex; gap: 4px; margin-bottom: 8px; background: rgba(15, 23, 42, 0.6); padding: 3px; border-radius: 6px;">
+          <button class="paper-tab-btn active" id="ptab-index" onclick="selectPaperAssetMode('INDEX')">📈 Index Levels</button>
+          <button class="paper-tab-btn" id="ptab-option" onclick="selectPaperAssetMode('OPTION')">🎯 Option Strike</button>
+          <button class="paper-tab-btn" id="ptab-commodity" onclick="selectPaperAssetMode('COMMODITY')">🛢️ MCX / Stock</button>
         </div>
 
-        <!-- Quick Paper Order Box -->
-        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Execute Simulated Order</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
-          <input type="text" id="trade-symbol" class="input-text" placeholder="Symbol (e.g. SBIN)" style="padding: 6px 8px; font-size: 12px;">
-          <input type="number" id="trade-qty" class="input-text" placeholder="Qty" value="1" min="1" style="padding: 6px 8px; font-size: 12px;">
-        </div>
-        <div style="display: flex; gap: 6px; margin-bottom: 14px;">
-          <button class="btn btn-green" style="flex: 1; justify-content: center;" onclick="executeTrade('BUY')">BUY Option/Stock</button>
-          <button class="btn btn-red" style="flex: 1; justify-content: center;" onclick="executeTrade('SELL')">SELL Position</button>
+        <!-- Quick Instrument Preset Chips -->
+        <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px;">
+          <button class="paper-preset-chip" onclick="applyPaperPreset('^NSEI', 'INDEX', 65, 'NIFTY 50')">NIFTY (65)</button>
+          <button class="paper-preset-chip" onclick="applyPaperPreset('^NSEBANK', 'INDEX', 30, 'BANK NIFTY')">BANKNIFTY (30)</button>
+          <button class="paper-preset-chip" onclick="applyPaperPreset('^BSESN', 'INDEX', 20, 'SENSEX')">SENSEX (20)</button>
+          <button class="paper-preset-chip" onclick="applyPaperPreset('CRUDEOIL', 'COMMODITY', 100, 'CRUDE OIL')">CRUDE (100)</button>
+          <button class="paper-preset-chip" onclick="applyPaperPreset('NATURALGAS', 'COMMODITY', 1250, 'NATURAL GAS')">NATGAS (1250)</button>
         </div>
 
-        <!-- Active Positions Table -->
-        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Open Holdings</div>
-        <div class="table-container">
+        <!-- Order Form -->
+        <div style="background: rgba(6, 10, 20, 0.7); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px; margin-bottom: 10px;">
+          <div style="display: grid; grid-template-columns: 1.4fr 0.8fr 0.8fr; gap: 6px; margin-bottom: 6px;">
+            <div>
+              <label style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Symbol / Instrument</label>
+              <input type="text" id="trade-symbol" class="input-text" placeholder="^NSEI, ^BSESN, SBIN" value="^NSEI" style="padding: 5px 8px; font-size: 11px; width: 100%;" oninput="onPaperSymbolChange()">
+            </div>
+            <div>
+              <label style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Lots</label>
+              <input type="number" id="trade-lots" class="input-text" value="1" min="1" max="100" style="padding: 5px 8px; font-size: 11px; width: 100%;" oninput="updatePaperLotCalc()">
+            </div>
+            <div>
+              <label style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Total Qty</label>
+              <input type="number" id="trade-qty" class="input-text" value="65" min="1" style="padding: 5px 8px; font-size: 11px; width: 100%;" readonly>
+            </div>
+          </div>
+
+          <!-- Spot Trigger Targets (Optional / Auto-filled from signals) -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px;">
+            <div>
+              <label style="font-size: 9px; color: var(--accent-green); text-transform: uppercase;">Target 1 (Pts)</label>
+              <input type="number" step="any" id="trade-target1" class="input-text" placeholder="T1 Level" style="padding: 4px 6px; font-size: 11px; width: 100%;">
+            </div>
+            <div>
+              <label style="font-size: 9px; color: var(--accent-green); text-transform: uppercase;">Target 2 (Pts)</label>
+              <input type="number" step="any" id="trade-target2" class="input-text" placeholder="T2 Level" style="padding: 4px 6px; font-size: 11px; width: 100%;">
+            </div>
+            <div>
+              <label style="font-size: 9px; color: var(--accent-red); text-transform: uppercase;">Stop Loss (Pts)</label>
+              <input type="number" step="any" id="trade-sl" class="input-text" placeholder="SL Level" style="padding: 4px 6px; font-size: 11px; width: 100%;">
+            </div>
+          </div>
+
+          <!-- Margin Estimate Note -->
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--text-muted); margin-bottom: 8px; font-family: 'JetBrains Mono';">
+            <span id="trade-margin-note">💡 Index Margin: ~10% Span Leverage</span>
+            <span id="trade-est-margin" style="color: #38BDF8; font-weight: 700;">Req Margin: ~₹15,925</span>
+          </div>
+
+          <!-- Execution Action Buttons (Long vs Short) -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <button class="btn btn-green" style="justify-content: center; padding: 7px 8px; font-weight: 800; font-size: 11px;" onclick="executeUnifiedPaperOrder('LONG')">
+              🟢 GO LONG / BUY INDEX
+            </button>
+            <button class="btn btn-red" style="justify-content: center; padding: 7px 8px; font-weight: 800; font-size: 11px;" onclick="executeUnifiedPaperOrder('SHORT')">
+              🔴 GO SHORT / SELL INDEX
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Open Positions Header & Table -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Open Positions & Live Points P&L</div>
+          <button class="btn" style="padding: 1px 6px; font-size: 9px; border-color: rgba(239, 68, 68, 0.3); color: #F87171;" onclick="closeAllPaperPositions()">Square Off All</button>
+        </div>
+        <div class="table-container" style="max-height: 250px; overflow-y: auto;">
           <table>
             <thead>
               <tr>
-                <th>Asset</th>
-                <th>Qty</th>
-                <th>Avg Buy</th>
-                <th>LTP</th>
-                <th>P&L</th>
+                <th>Instrument</th>
+                <th>Side / Qty</th>
+                <th>Entry / LTP</th>
+                <th>Points P&L</th>
+                <th>Net P&L</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="positions-tbody">
-              <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 12px;">No active paper positions</td></tr>
+              <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 12px;">No active paper positions</td></tr>
             </tbody>
           </table>
         </div>
@@ -2431,6 +2835,13 @@
 
         // E. 21-Factor Institutional Confluence Matrix
         renderInstitutionalMatrix(selectedInstSymbol);
+
+        // E2. Multi-Timeframe Support & Resistance Cockpit
+        if (cachedSrData[selectedSrSymbol]) {
+          renderSupportResistance(selectedSrSymbol, cachedSrData[selectedSrSymbol]);
+        } else {
+          loadSupportResistanceData(selectedSrSymbol);
+        }
 
         // F. Watchlist Real-Time Quotes
         if (snap.watchlist) {
@@ -3289,6 +3700,237 @@
     }).join('');
   }
 
+  // -------------------------------------------------------------
+  // Multi-Timeframe Support & Resistance Cockpit Controller
+  // -------------------------------------------------------------
+  let selectedSrSymbol = '^NSEI';
+  const cachedSrData = {};
+
+  function selectSrSymbol(sym) {
+    selectedSrSymbol = sym;
+    const tabMap = {
+      '^NSEI': 'sr-tab-NSEI',
+      '^NSEBANK': 'sr-tab-NSEBANK',
+      '^BSESN': 'sr-tab-BSESN',
+      'CRUDEOIL': 'sr-tab-CRUDEOIL',
+      'NATURALGAS': 'sr-tab-NATURALGAS',
+      'GOLD': 'sr-tab-GOLD',
+    };
+    Object.values(tabMap).forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.classList.remove('active');
+    });
+    const activeId = tabMap[sym];
+    if (activeId) {
+      const activeBtn = document.getElementById(activeId);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+
+    if (cachedSrData[sym]) {
+      renderSupportResistance(sym, cachedSrData[sym]);
+    } else {
+      loadSupportResistanceData(sym);
+    }
+  }
+
+  async function loadSupportResistanceData(sym) {
+    try {
+      const res = await fetch(`/api/v1/market/support-resistance/${encodeURIComponent(sym)}`);
+      if (res.ok) {
+        const data = await res.json();
+        cachedSrData[sym] = data;
+        renderSupportResistance(sym, data);
+      }
+    } catch (e) {
+      console.debug('SR fetch error:', e);
+    }
+  }
+
+  function renderSupportResistance(sym, data) {
+    if (!data) return;
+
+    const curPrice = Number(data.current_price || 0);
+
+    // 1. S/R KPI Cards
+    const r1El = document.getElementById('sr-kpi-r1');
+    const r1DistEl = document.getElementById('sr-kpi-r1-dist');
+    const s1El = document.getElementById('sr-kpi-s1');
+    const s1DistEl = document.getElementById('sr-kpi-s1-dist');
+    const cprTypeEl = document.getElementById('sr-kpi-cpr-type');
+    const cprValsEl = document.getElementById('sr-kpi-cpr-vals');
+    const camStatusEl = document.getElementById('sr-kpi-cam-status');
+    const camH4L4El = document.getElementById('sr-kpi-cam-h4l4');
+    const oiWallsEl = document.getElementById('sr-kpi-oi-walls');
+    const maxPainEl = document.getElementById('sr-kpi-max-pain');
+    const smcZonesEl = document.getElementById('sr-kpi-smc-zones');
+    const smcBiasEl = document.getElementById('sr-kpi-smc-bias');
+
+    const rNear = Number(data.r_near || (data.daily_classical && data.daily_classical.r1) || (curPrice * 1.008));
+    const sNear = Number(data.s_near || (data.daily_classical && data.daily_classical.s1) || (curPrice * 0.992));
+
+    if (r1El) r1El.innerText = formatCurrency(rNear);
+    if (r1DistEl && curPrice > 0) {
+      const diff = rNear - curPrice;
+      const pct = (diff / curPrice) * 100;
+      r1DistEl.innerText = `+${diff.toFixed(1)} pts (+${pct.toFixed(2)}%)`;
+    }
+
+    if (s1El) s1El.innerText = formatCurrency(sNear);
+    if (s1DistEl && curPrice > 0) {
+      const diff = curPrice - sNear;
+      const pct = (diff / curPrice) * 100;
+      s1DistEl.innerText = `-${diff.toFixed(1)} pts (-${pct.toFixed(2)}%)`;
+    }
+
+    // Daily CPR KPI
+    const dcpr = data.daily_cpr || {};
+    if (cprTypeEl) {
+      const ctype = (dcpr.cpr_type || 'AVERAGE_CPR').replace(/_/g, ' ');
+      cprTypeEl.innerText = ctype;
+      cprTypeEl.style.color = (dcpr.cpr_type || '').includes('VIRGIN') ? '#A78BFA' : ((dcpr.cpr_type || '').includes('NARROW') ? '#34D399' : '#38BDF8');
+    }
+    if (cprValsEl) {
+      cprValsEl.innerText = `TC: ${formatCurrency(dcpr.tc || 0)} | P: ${formatCurrency(dcpr.pivot || 0)} | BC: ${formatCurrency(dcpr.bc || 0)}`;
+    }
+
+    // Camarilla KPI
+    const cam = data.camarilla_daily || {};
+    if (camStatusEl) {
+      camStatusEl.innerText = (cam.range_status || 'INSIDE_RANGE').replace(/_/g, ' ');
+      camStatusEl.style.color = (cam.breakout_signal || '').includes('BULL') ? '#34D399' : ((cam.breakout_signal || '').includes('BEAR') ? '#F87171' : '#FBBF24');
+    }
+    if (camH4L4El) {
+      camH4L4El.innerText = `H4: ${formatCurrency(cam.h4 || 0)} | L4: ${formatCurrency(cam.l4 || 0)}`;
+    }
+
+    // Derivative OI Walls KPI
+    const deriv = data.derivatives_sr || {};
+    if (oiWallsEl) {
+      const callOI = deriv.max_call_oi_strike ? `₹${deriv.max_call_oi_strike}` : 'N/A';
+      const putOI = deriv.max_put_oi_strike ? `₹${deriv.max_put_oi_strike}` : 'N/A';
+      oiWallsEl.innerText = `C: ${callOI} | P: ${putOI}`;
+    }
+    if (maxPainEl) {
+      maxPainEl.innerText = deriv.max_pain_strike ? `Max Pain: ₹${deriv.max_pain_strike} (${deriv.writer_bias || 'NEUTRAL'})` : `PCR (OI): ${deriv.pcr_ratio || '--'}`;
+    }
+
+    // SMC KPI
+    const smc = data.order_blocks || {};
+    if (smcZonesEl) {
+      const dem = smc.active_demand_zone ? `D: ${formatCurrency(smc.active_demand_zone[0])}` : 'No Demand';
+      const sup = smc.active_supply_zone ? `S: ${formatCurrency(smc.active_supply_zone[1])}` : 'No Supply';
+      smcZonesEl.innerText = `${dem} | ${sup}`;
+    }
+    if (smcBiasEl) {
+      smcBiasEl.innerText = (smc.smc_bias || 'SMART_MONEY_FLOW').replace(/_/g, ' ');
+    }
+
+    // 2. Detailed Breakdown Grid
+    // Hierarchy
+    const rMajor = Number(data.r_major || (data.daily_classical && data.daily_classical.r3) || (curPrice * 1.025));
+    const rMid = Number(data.r_mid || (data.daily_classical && data.daily_classical.r2) || (curPrice * 1.015));
+    const sMid = Number(data.s_mid || (data.daily_classical && data.daily_classical.s2) || (curPrice * 0.985));
+    const sMajor = Number(data.s_major || (data.daily_classical && data.daily_classical.s3) || (curPrice * 0.975));
+
+    const srhR3 = document.getElementById('srh-r3');
+    const srhR2 = document.getElementById('srh-r2');
+    const srhR1 = document.getElementById('srh-r1');
+    const srhSpot = document.getElementById('srh-spot');
+    const srhS1 = document.getElementById('srh-s1');
+    const srhS2 = document.getElementById('srh-s2');
+    const srhS3 = document.getElementById('srh-s3');
+
+    if (srhR3) srhR3.innerText = formatCurrency(rMajor);
+    if (srhR2) srhR2.innerText = formatCurrency(rMid);
+    if (srhR1) srhR1.innerText = formatCurrency(rNear);
+    if (srhSpot) srhSpot.innerText = formatCurrency(curPrice);
+    if (srhS1) srhS1.innerText = formatCurrency(sNear);
+    if (srhS2) srhS2.innerText = formatCurrency(sMid);
+    if (srhS3) srhS3.innerText = formatCurrency(sMajor);
+
+    // CPR Breakdown
+    const wcpr = data.weekly_cpr || {};
+    const srcprDTc = document.getElementById('srcpr-d-tc');
+    const srcprDP = document.getElementById('srcpr-d-p');
+    const srcprDBc = document.getElementById('srcpr-d-bc');
+    const srcprDWidth = document.getElementById('srcpr-d-width');
+    const srcprWP = document.getElementById('srcpr-w-p');
+    const srcprDExp = document.getElementById('srcpr-d-exp');
+
+    if (srcprDTc) srcprDTc.innerText = formatCurrency(dcpr.tc || 0);
+    if (srcprDP) srcprDP.innerText = formatCurrency(dcpr.pivot || 0);
+    if (srcprDBc) srcprDBc.innerText = formatCurrency(dcpr.bc || 0);
+    if (srcprDWidth) srcprDWidth.innerText = `${(dcpr.cpr_width_pct || 0).toFixed(2)}% (${(dcpr.cpr_type || '').replace(/_/g, ' ')})`;
+    if (srcprWP) srcprWP.innerText = `P: ${formatCurrency(wcpr.pivot || 0)} | TC: ${formatCurrency(wcpr.tc || 0)} | BC: ${formatCurrency(wcpr.bc || 0)}`;
+    if (srcprDExp) srcprDExp.innerText = dcpr.expectation || 'Trading Inside Range';
+
+    // Camarilla Breakdown
+    const srcamH5 = document.getElementById('srcam-h5');
+    const srcamH4 = document.getElementById('srcam-h4');
+    const srcamH3 = document.getElementById('srcam-h3');
+    const srcamL3 = document.getElementById('srcam-l3');
+    const srcamL4 = document.getElementById('srcam-l4');
+    const srcamL5 = document.getElementById('srcam-l5');
+
+    if (srcamH5) srcamH5.innerText = formatCurrency(cam.h5 || 0);
+    if (srcamH4) srcamH4.innerText = formatCurrency(cam.h4 || 0);
+    if (srcamH3) srcamH3.innerText = formatCurrency(cam.h3 || 0);
+    if (srcamL3) srcamL3.innerText = formatCurrency(cam.l3 || 0);
+    if (srcamL4) srcamL4.innerText = formatCurrency(cam.l4 || 0);
+    if (srcamL5) srcamL5.innerText = formatCurrency(cam.l5 || 0);
+
+    // Multi-Day Extremes Breakdown
+    const ext = data.multi_day_extremes || {};
+    const srePdh = document.getElementById('sre-pdh');
+    const srePdl = document.getElementById('sre-pdl');
+    const srePdc = document.getElementById('sre-pdc');
+    const sre2d = document.getElementById('sre-2d');
+    const sre5d = document.getElementById('sre-5d');
+    const sre20d = document.getElementById('sre-20d');
+
+    if (srePdh) srePdh.innerText = formatCurrency(ext.pdh || 0);
+    if (srePdl) srePdl.innerText = formatCurrency(ext.pdl || 0);
+    if (srePdc) srePdc.innerText = formatCurrency(ext.pdc || 0);
+    if (sre2d) sre2d.innerText = `H: ${formatCurrency(ext.two_day_high || 0)} | L: ${formatCurrency(ext.two_day_low || 0)}`;
+    if (sre5d) sre5d.innerText = `H: ${formatCurrency(ext.five_day_high || 0)} | L: ${formatCurrency(ext.five_day_low || 0)}`;
+    if (sre20d) sre20d.innerText = `H: ${formatCurrency(ext.twenty_day_high || 0)} | L: ${formatCurrency(ext.twenty_day_low || 0)}`;
+
+    // Derivative Barriers Breakdown
+    const sroiCall = document.getElementById('sroi-call-oi');
+    const sroiPut = document.getElementById('sroi-put-oi');
+    const sroiPain = document.getElementById('sroi-max-pain');
+    const sroiPcr = document.getElementById('sroi-pcr');
+    const sroiBias = document.getElementById('sroi-bias');
+
+    if (sroiCall) sroiCall.innerText = deriv.max_call_oi_strike ? `₹${deriv.max_call_oi_strike}` : 'N/A';
+    if (sroiPut) sroiPut.innerText = deriv.max_put_oi_strike ? `₹${deriv.max_put_oi_strike}` : 'N/A';
+    if (sroiPain) sroiPain.innerText = deriv.max_pain_strike ? `₹${deriv.max_pain_strike}` : 'N/A';
+    if (sroiPcr) sroiPcr.innerText = deriv.pcr_ratio ? `${deriv.pcr_ratio}` : '--';
+    if (sroiBias) {
+      sroiBias.innerText = deriv.writer_bias || 'NEUTRAL';
+      sroiBias.style.color = (deriv.writer_bias || '').includes('BULL') ? '#34D399' : ((deriv.writer_bias || '').includes('BEAR') ? '#F87171' : '#CBD5E1');
+    }
+
+    // Fibonacci & SMC Breakdown
+    const fib = data.macro_fibonacci || {};
+    const srfib618 = document.getElementById('srfib-618');
+    const srfib500 = document.getElementById('srfib-500');
+    const srfib786 = document.getElementById('srfib-786');
+    const srsmcDemand = document.getElementById('srsmc-demand');
+    const srsmcSupply = document.getElementById('srsmc-supply');
+
+    if (srfib618) srfib618.innerText = formatCurrency(fib.fib_618_golden_pocket || 0);
+    if (srfib500) srfib500.innerText = formatCurrency(fib.fib_500 || 0);
+    if (srfib786) srfib786.innerText = formatCurrency(fib.fib_786 || 0);
+
+    if (srsmcDemand) {
+      srsmcDemand.innerText = smc.active_demand_zone ? `₹${smc.active_demand_zone[0]} - ₹${smc.active_demand_zone[1]}` : 'None Active';
+    }
+    if (srsmcSupply) {
+      srsmcSupply.innerText = smc.active_supply_zone ? `₹${smc.active_supply_zone[0]} - ₹${smc.active_supply_zone[1]}` : 'None Active';
+    }
+  }
+
   function renderWatchlist(watchlist) {
     const tbody = document.getElementById('watchlist-tbody');
     if (!tbody || !watchlist || watchlist.length === 0) return;
@@ -3376,34 +4018,283 @@
     }
   }
 
+  // Multi-Asset & Index-Level Paper Trader State
+  let currentPaperAssetMode = 'INDEX';
+  const LOT_MAP = {
+    '^NSEI': { name: 'NIFTY 50', lot: 65, type: 'INDEX', marginRatio: 0.10 },
+    'NIFTY': { name: 'NIFTY 50', lot: 65, type: 'INDEX', marginRatio: 0.10 },
+    '^NSEBANK': { name: 'BANK NIFTY', lot: 30, type: 'INDEX', marginRatio: 0.10 },
+    'BANKNIFTY': { name: 'BANK NIFTY', lot: 30, type: 'INDEX', marginRatio: 0.10 },
+    '^BSESN': { name: 'SENSEX', lot: 20, type: 'INDEX', marginRatio: 0.10 },
+    'SENSEX': { name: 'SENSEX', lot: 20, type: 'INDEX', marginRatio: 0.10 },
+    'CRUDEOIL': { name: 'CRUDE OIL', lot: 100, type: 'COMMODITY', marginRatio: 0.10 },
+    'NATURALGAS': { name: 'NATURAL GAS', lot: 1250, type: 'COMMODITY', marginRatio: 0.10 }
+  };
+
+  function selectPaperAssetMode(mode) {
+    currentPaperAssetMode = mode;
+    ['ptab-index', 'ptab-option', 'ptab-commodity'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    });
+
+    const activeEl = document.getElementById(mode === 'INDEX' ? 'ptab-index' : (mode === 'OPTION' ? 'ptab-option' : 'ptab-commodity'));
+    if (activeEl) activeEl.classList.add('active');
+
+    const marginNote = document.getElementById('trade-margin-note');
+    if (mode === 'INDEX') {
+      if (marginNote) marginNote.innerText = '💡 Index Margin: ~10% Span Leverage';
+    } else if (mode === 'OPTION') {
+      if (marginNote) marginNote.innerText = '🎯 Option Margin: 100% Cash Premium';
+    } else {
+      if (marginNote) marginNote.innerText = '🛢️ Commodity/Equity: Dynamic Margining';
+    }
+    updatePaperLotCalc();
+  }
+
+  function applyPaperPreset(symbol, assetType, lotSize, displayName) {
+    document.getElementById('trade-symbol').value = symbol;
+    selectPaperAssetMode(assetType);
+    updatePaperLotCalc();
+    showToast(`📈 Selected ${displayName} (Lot Size: ${lotSize})`);
+  }
+
+  function onPaperSymbolChange() {
+    updatePaperLotCalc();
+  }
+
+  function updatePaperLotCalc() {
+    const symInput = document.getElementById('trade-symbol');
+    const lotsInput = document.getElementById('trade-lots');
+    const qtyInput = document.getElementById('trade-qty');
+    const marginEstEl = document.getElementById('trade-est-margin');
+
+    if (!symInput || !lotsInput || !qtyInput) return;
+
+    const sym = symInput.value.trim().toUpperCase();
+    const lots = Math.max(1, parseInt(lotsInput.value, 10) || 1);
+    const info = LOT_MAP[sym] || { lot: 1, type: currentPaperAssetMode, marginRatio: currentPaperAssetMode === 'INDEX' || currentPaperAssetMode === 'COMMODITY' ? 0.10 : 1.0 };
+
+    const totalQty = lots * info.lot;
+    qtyInput.value = totalQty;
+
+    // Estimated margin calculation if cached price exists
+    if (marginEstEl) {
+      if (info.type === 'INDEX') {
+        let estPrice = 24500;
+        if (sym.includes('BANK')) estPrice = 52000;
+        else if (sym.includes('BSESN') || sym.includes('SENSEX')) estPrice = 80000;
+        const estMargin = (totalQty * estPrice) * 0.10;
+        marginEstEl.innerText = `Req Margin: ~₹${Math.round(estMargin).toLocaleString('en-IN')}`;
+      } else if (info.type === 'COMMODITY') {
+        let estPrice = sym.includes('CRUDE') ? 6000 : 250;
+        const estMargin = (totalQty * estPrice) * 0.10;
+        marginEstEl.innerText = `Req Margin: ~₹${Math.round(estMargin).toLocaleString('en-IN')}`;
+      } else {
+        marginEstEl.innerText = `Lot Units: ${totalQty}`;
+      }
+    }
+  }
+
+  async function executeUnifiedPaperOrder(side) {
+    const symbol = document.getElementById('trade-symbol').value.trim().toUpperCase();
+    const lots = parseInt(document.getElementById('trade-lots').value, 10) || 1;
+    const qty = parseInt(document.getElementById('trade-qty').value, 10) || 1;
+    const target1 = parseFloat(document.getElementById('trade-target1').value) || null;
+    const target2 = parseFloat(document.getElementById('trade-target2').value) || null;
+    const stopLoss = parseFloat(document.getElementById('trade-sl').value) || null;
+
+    if (!symbol) {
+      showToast('⚠️ Please enter a valid Symbol');
+      return;
+    }
+
+    try {
+      showToast(`⏳ Placing ${side} order for ${lots} lot(s) (${qty} units) of ${symbol}...`);
+      const res = await fetch('/api/v1/paper/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbol: symbol,
+          side: side,
+          asset_type: currentPaperAssetMode,
+          lots: lots,
+          quantity: qty,
+          target_1: target1,
+          target_2: target2,
+          stop_loss: stopLoss,
+          notes: `Dashboard manual simulated trade [${side}]`
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(`✅ ${data.message}`);
+        await loadPortfolio();
+      } else {
+        showToast(`❌ Order Failed: ${data.detail || data.message || 'Execution error'}`);
+      }
+    } catch (e) {
+      showToast(`❌ Network Error: ${e.message}`);
+    }
+  }
+
+  async function closePaperPosition(symbol) {
+    try {
+      showToast(`⏳ Closing position for ${symbol}...`);
+      const res = await fetch('/api/v1/paper/close', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: symbol })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(`✅ Position closed: Realized P&L ${data.realized_pnl >= 0 ? '+' : ''}₹${data.realized_pnl.toFixed(2)}`);
+        await loadPortfolio();
+      } else {
+        showToast(`❌ Failed: ${data.detail || data.message}`);
+      }
+    } catch (e) {
+      showToast(`❌ Error: ${e.message}`);
+    }
+  }
+
+  async function closeAllPaperPositions() {
+    if (!confirm('Are you sure you want to square off all open paper trading positions at market price?')) return;
+    try {
+      showToast('⏳ Squaring off all positions...');
+      const res = await fetch('/api/v1/paper/close-all', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(`✅ ${data.message} Total Realized: ₹${(data.total_realized_pnl || 0).toFixed(2)}`);
+        await loadPortfolio();
+      } else {
+        showToast(`❌ Failed: ${data.detail || data.message}`);
+      }
+    } catch (e) {
+      showToast(`❌ Error: ${e.message}`);
+    }
+  }
+
+  async function reversePaperPosition(symbol) {
+    try {
+      showToast(`🔄 Reversing position for ${symbol}...`);
+      const res = await fetch('/api/v1/paper/reverse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: symbol })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(`✅ ${data.message}`);
+        await loadPortfolio();
+      } else {
+        showToast(`❌ Failed: ${data.detail || data.message}`);
+      }
+    } catch (e) {
+      showToast(`❌ Error: ${e.message}`);
+    }
+  }
+
+  async function resetPaperPortfolio() {
+    if (!confirm('Reset paper trading virtual capital to fresh ₹1,00,000 and clear all positions?')) return;
+    try {
+      const res = await fetch('/api/v1/paper/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initial_balance: 100000.0 })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast('🔄 Virtual portfolio successfully reset to ₹1,00,000.00');
+        await loadPortfolio();
+      }
+    } catch (e) {
+      showToast(`❌ Error: ${e.message}`);
+    }
+  }
+
   async function loadPortfolio() {
     try {
       const res = await fetch('/api/v1/paper/portfolio');
       const data = await res.json();
 
-      document.getElementById('port-cash').innerText = formatCurrency(data.available_cash);
-      document.getElementById('port-value').innerText = formatCurrency(data.total_portfolio_value);
+      const cashEl = document.getElementById('port-cash');
+      const valueEl = document.getElementById('port-value');
+      const marginEl = document.getElementById('port-margin');
+      const pnlEl = document.getElementById('port-pnl');
+
+      if (cashEl) cashEl.innerText = formatCurrency(data.available_cash);
+      if (valueEl) valueEl.innerText = formatCurrency(data.total_portfolio_value);
+      if (marginEl) marginEl.innerText = formatCurrency(data.margin_utilized || 0);
+
+      const netPnl = data.total_pnl || (data.total_unrealized_pnl + data.total_realized_pnl) || 0;
+      const winRate = data.win_rate !== undefined ? data.win_rate : 0;
+      if (pnlEl) {
+        const isPos = netPnl >= 0;
+        pnlEl.className = `num-mono ${isPos ? 'positive' : 'negative'}`;
+        pnlEl.innerText = `${isPos ? '+' : ''}${formatCurrency(netPnl)} (${winRate.toFixed(1)}% WR)`;
+      }
 
       const tbody = document.getElementById('positions-tbody');
+      if (!tbody) return;
       tbody.innerHTML = '';
 
       if (!data.positions || data.positions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 12px;">No active paper positions</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 12px;">No active paper positions</td></tr>';
         return;
       }
 
       data.positions.forEach(pos => {
-        const isPos = pos.unrealized_pnl >= 0;
+        const isPos = (pos.unrealized_pnl || 0) >= 0;
         const pnlClass = isPos ? 'positive' : 'negative';
-        const pnlText = (isPos ? '+' : '') + formatCurrency(pos.unrealized_pnl);
+        const pnlText = (isPos ? '+' : '') + formatCurrency(pos.unrealized_pnl || 0);
+        const ptsPnl = pos.points_pnl !== undefined ? pos.points_pnl : (pos.current_price - pos.average_buy_price);
+        const ptsText = (ptsPnl >= 0 ? '+' : '') + ptsPnl.toFixed(2) + ' pts';
+        const side = pos.side || 'LONG';
+        const sideClass = side === 'LONG' ? 'pos-side-long' : 'pos-side-short';
+        const assetType = pos.asset_type || 'EQUITY';
+
+        let stateBadge = '';
+        if (pos.state === 'TARGET_1_HIT') {
+          stateBadge = '<span style="display: block; font-size: 8px; color: #34D399; font-weight: 700;">🎯 T1 REACHED (SL BE)</span>';
+        } else if (pos.state === 'TARGET_2_HIT') {
+          stateBadge = '<span style="display: block; font-size: 8px; color: #38BDF8; font-weight: 700;">🏆 T2 MAX REACHED</span>';
+        } else if (pos.state === 'SL_HIT') {
+          stateBadge = '<span style="display: block; font-size: 8px; color: #F87171; font-weight: 700;">🛑 SL BREACHED</span>';
+        }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td style="font-weight: 700; font-family: monospace;">${pos.symbol}</td>
-          <td class="num-mono">${pos.quantity}</td>
-          <td class="num-mono">${formatCurrency(pos.average_buy_price)}</td>
-          <td class="num-mono">${formatCurrency(pos.current_price)}</td>
-          <td class="num-mono ${pnlClass}">${pnlText}</td>
+          <td>
+            <div style="font-weight: 800; font-family: 'JetBrains Mono'; font-size: 11px;">${pos.display_name || pos.symbol}</div>
+            <div style="font-size: 9px; color: var(--text-muted);">${assetType} • ${pos.lots || 1} Lot(s)</div>
+            ${stateBadge}
+          </td>
+          <td>
+            <span class="pos-side-badge ${sideClass}">${side}</span>
+            <span class="num-mono" style="font-size: 11px; margin-left: 4px;">${pos.quantity} Qty</span>
+          </td>
+          <td class="num-mono" style="font-size: 11px;">
+            <div>Avg: ₹${(pos.average_buy_price || 0).toFixed(2)}</div>
+            <div style="color: var(--accent-blue);">LTP: ₹${(pos.current_price || 0).toFixed(2)}</div>
+          </td>
+          <td class="num-mono ${pnlClass}" style="font-size: 11px; font-weight: 700;">
+            ${ptsText}
+          </td>
+          <td class="num-mono ${pnlClass}" style="font-size: 11px; font-weight: 800;">
+            ${pnlText}
+          </td>
+          <td>
+            <div style="display: flex; gap: 3px;">
+              <button class="btn" style="padding: 2px 5px; font-size: 9px; border-color: rgba(56, 189, 248, 0.4); color: #38BDF8;" onclick="reversePaperPosition('${pos.symbol}')" title="Reverse Position (Flip Long <-> Short)">
+                🔄 Flip
+              </button>
+              <button class="btn" style="padding: 2px 5px; font-size: 9px; border-color: rgba(239, 68, 68, 0.4); color: #F87171;" onclick="closePaperPosition('${pos.symbol}')" title="Square off position">
+                ✕ Exit
+              </button>
+            </div>
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -3412,42 +4303,29 @@
     }
   }
 
-  async function executeTrade(side) {
-    const symbol = document.getElementById('trade-symbol').value.trim().toUpperCase();
-    const qty = parseInt(document.getElementById('trade-qty').value, 10);
+  function prefillIndexTrade(symbol, side, t1, t2, sl, lots = 1) {
+    document.getElementById('trade-symbol').value = symbol;
+    document.getElementById('trade-lots').value = lots;
+    if (t1) document.getElementById('trade-target1').value = t1;
+    if (t2) document.getElementById('trade-target2').value = t2;
+    if (sl) document.getElementById('trade-sl').value = sl;
+    selectPaperAssetMode('INDEX');
+    updatePaperLotCalc();
+    showToast(`📈 Pre-filled ${symbol} [${side}] with Target & SL levels`);
+    document.getElementById('trade-symbol').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 
-    if (!symbol || !qty || qty <= 0) {
-      showToast('⚠️ Please enter a valid Symbol and Quantity');
-      return;
-    }
-
-    try {
-      // 1. Fetch current price
-      const pRes = await fetch(`/api/v1/market/price/${symbol}`);
-      if (!pRes.ok) {
-        showToast(`❌ Could not fetch price for ${symbol}`);
-        return;
-      }
-      const pData = await pRes.json();
-      const price = pData.price;
-
-      const endpoint = side === 'BUY' ? '/api/v1/paper/buy' : '/api/v1/paper/sell';
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbol: symbol, quantity: qty, price: price })
-      });
-
-      const resData = await res.json();
-      if (res.ok && resData.success) {
-        showToast(`✅ ${side} order filled for ${qty}x ${symbol} @ ₹${price.toFixed(2)}`);
-        loadPortfolio();
-      } else {
-        showToast(`❌ Trade failed: ${resData.detail || resData.message || 'Execution error'}`);
-      }
-    } catch (e) {
-      showToast(`❌ Trade error: ${e.message}`);
-    }
+  function prefillOptionFromCard(symbol, strike, side, premium, t1, t2, sl, lots = 1) {
+    const optSym = `${symbol} ${strike} ${side}`;
+    document.getElementById('trade-symbol').value = optSym;
+    document.getElementById('trade-lots').value = lots;
+    if (t1) document.getElementById('trade-target1').value = t1;
+    if (t2) document.getElementById('trade-target2').value = t2;
+    if (sl) document.getElementById('trade-sl').value = sl;
+    selectPaperAssetMode('OPTION');
+    updatePaperLotCalc();
+    showToast(`🎯 Pre-filled ${optSym} @ ₹${premium} with Option Targets`);
+    document.getElementById('trade-symbol').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   function prefillTrade(symbol, defaultQty = 1) {
@@ -3788,6 +4666,8 @@
     loadNews(true);
     loadAuditData();
     loadLocalStorageStatus();
+    loadSupportResistanceData(selectedSrSymbol);
+    loadMasterStrategy();
   }
 
   // Trade Audit & Autonomous Self-Correction Controller
@@ -4245,6 +5125,7 @@
     loadInstagramStatus();
     loadAuditData();
     loadLocalStorageStatus();
+    loadSupportResistanceData(selectedSrSymbol);
     loadMasterStrategy();
   });
 </script>

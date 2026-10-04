@@ -215,6 +215,51 @@ class TelegramService:
             factors_lines.append(f"  • RSI (14): Momentum ({rsi_val:.1f})")
         factors_text = "\n".join(factors_lines)
 
+        # Multi-Timeframe Support & Resistance Extraction
+        sr = sig.get("multi_timeframe_sr", {})
+        dl = sig.get("day_levels", {})
+
+        s_near = float(sr.get("s_near") or dl.get("pivots", {}).get("s1") or (spot_ltp * 0.992))
+        s_mid = float(sr.get("s_mid") or dl.get("pivots", {}).get("s2") or (spot_ltp * 0.985))
+        r_near = float(sr.get("r_near") or dl.get("pivots", {}).get("r1") or (spot_ltp * 1.008))
+        r_mid = float(sr.get("r_mid") or dl.get("pivots", {}).get("r2") or (spot_ltp * 1.015))
+
+        cpr_info = dl.get("cpr", {}) or sr.get("daily_cpr", {})
+        tc_val = float(cpr_info.get("tc", spot_ltp * 1.002))
+        p_val = float(cpr_info.get("pivot", spot_ltp))
+        bc_val = float(cpr_info.get("bc", spot_ltp * 0.998))
+        cpr_type = str(cpr_info.get("cpr_type") or cpr_info.get("type") or "AVERAGE_CPR").replace("_", " ")
+
+        extremes = sr.get("multi_day_extremes", {})
+        pdh_val = float(dl.get("pdh") or extremes.get("pdh", spot_ltp * 1.008))
+        pdl_val = float(dl.get("pdl") or extremes.get("pdl", spot_ltp * 0.992))
+
+        cam_info = dl.get("camarilla", {}) or sr.get("camarilla_daily", {}) or sr.get("daily_camarilla", {})
+        h4_val = float(cam_info.get("h4", spot_ltp * 1.006))
+        l4_val = float(cam_info.get("l4", spot_ltp * 0.994))
+
+        deriv_sr = sr.get("derivatives_sr", {})
+        max_call_oi = pcr.get("max_call_oi_strike") or deriv_sr.get("max_call_oi_strike")
+        max_put_oi = pcr.get("max_put_oi_strike") or deriv_sr.get("max_put_oi_strike")
+        max_pain = pcr.get("max_pain_strike") or deriv_sr.get("max_pain_strike")
+
+        oi_barriers_line = ""
+        if max_call_oi or max_put_oi:
+            oi_call_str = f"₹{max_call_oi}" if max_call_oi else "N/A"
+            oi_put_str = f"₹{max_put_oi}" if max_put_oi else "N/A"
+            oi_pain_str = f" | Max Pain: ₹{max_pain}" if max_pain else ""
+            oi_barriers_line = f"  • <b>Derivative Walls (OI):</b> Max Call OI: {oi_call_str} | Max Put OI: {oi_put_str}{oi_pain_str}\n"
+
+        sr_section = (
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🧱 <b>SUPPORT &amp; RESISTANCE CONFLUENCE:</b>\n"
+            f"  • <b>Key Resistance:</b> R1: ₹{r_near:,.2f} | R2: ₹{r_mid:,.2f}\n"
+            f"  • <b>Key Support:</b> S1: ₹{s_near:,.2f} | S2: ₹{s_mid:,.2f}\n"
+            f"  • <b>Daily CPR:</b> TC: ₹{tc_val:,.2f} | P: ₹{p_val:,.2f} | BC: ₹{bc_val:,.2f} ({html.escape(cpr_type)})\n"
+            f"  • <b>Pivots &amp; Extremes:</b> PDH: ₹{pdh_val:,.2f} | PDL: ₹{pdl_val:,.2f} | Cam H4: ₹{h4_val:,.2f}\n"
+            f"{oi_barriers_line}"
+        )
+
         # 21-Factor Institutional Matrix
         matrix = sig.get("institutional_matrix", {})
         passed_cnt = int(matrix.get("passed_count", 9))
@@ -265,7 +310,7 @@ class TelegramService:
             f"{inst_flow_section}"
             f"💡 <b>Key Technical Factors:</b>\n"
             f"{factors_text}\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"{sr_section}"
             f"🏛️ <b>21-FACTOR INSTITUTIONAL MATRIX:</b>\n"
             f"  • <b>Filter Confluence:</b> {passed_cnt}/{tot_cnt} PASS ({conf_pct:.1f}%)\n"
             f"  • <b>Market Regime:</b> {html.escape(regime)}\n"
