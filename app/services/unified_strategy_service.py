@@ -566,24 +566,41 @@ class UnifiedStrategyService:
         chop_s = 100.0 * np.log10(np.maximum(1e-4, sum_tr_14 / denom)) / np.log10(14)
         chop_s = chop_s.fillna(50.0).clip(0.0, 100.0)
 
-        # Bar Delta & Cumulative Volume Delta (CVD)
+        # RSI 14
+        delta = close_s.diff()
+        gain = (delta.where(delta > 0, 0)).rolling(14, min_periods=1).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(14, min_periods=1).mean()
+        rs = gain / loss.replace(0, 1e-4)
+        rsi_s = (100.0 - (100.0 / (1.0 + rs))).fillna(50.0)
+
+        # EMA 9 3-bar slope velocity
+        ema9_slope = (ema9_s - ema9_s.shift(3)) / atr_s.replace(0, 1e-4)
+
+        # Candle Body Ratio
         bar_range = (high_s - low_s).replace(0, 1e-4)
+        body_ratio_s = (close_s - open_s).abs() / bar_range
+
+        # Bar Delta & Cumulative Volume Delta (CVD)
         bar_delta = ((close_s - open_s) / bar_range) * vol_s
         cvd_s = bar_delta.cumsum()
         cvd_slope = cvd_s.diff(3).fillna(0.0)
         vol_sma_s = vol_s.rolling(20, min_periods=1).mean()
 
-        # 3. Fast Simulation Runner
+        # 3. Fast Institutional Simulation Runner
         def _run_simulation(
             df_data: pd.DataFrame,
-            conf_thresh: float,
-            chop_limit: float,
-            t1_mult: float = 1.0,
-            sl_mult: float = 1.0,
+            conf_thresh: float = 60.0,
+            chop_limit: float = 52.0,
+            t1_mult: float = 0.75,
+            t2_mult: float = 2.5,
+            sl_mult: float = 1.1,
+            min_gap: float = 0.15,
+            min_body: float = 0.40,
+            require_kz: bool = True,
         ) -> Dict[str, Any]:
             trades = []
             active_trade = None
-            window_size = 15
+            window_size = 20
             n_bars = len(df_data)
 
             closes = df_data["close"].values
@@ -597,6 +614,9 @@ class UnifiedStrategyService:
             ema50 = ema50_s.values
             atr = atr_s.values
             chop = chop_s.values
+            rsi_arr = rsi_s.values
+            slope_arr = ema9_slope.fillna(0.0).values
+            body_arr = body_ratio_s.fillna(0.5).values
             cvd_diff = cvd_slope.values
             vols = vol_s.values
             vol_sma = vol_sma_s.values
@@ -677,48 +697,79 @@ class UnifiedStrategyService:
                     cooldown_bars -= 1
                     continue
 
-                # Check for new entry trigger
-                if active_trade is None and chop[i] <= chop_limit:
+                # Timing filter: Avoid 11:30 - 13:00 and after 15:05 for intraday
+                is_good_time = True
+                if require_kz and " " in bar_time:
+                    time_part = bar_time.split(" ")[1] if len(bar_time.split(" ")) > 1 else ""
+                    if "11:30" <= time_part <= "13:00" or time_part >= "15:05":
+                        is_good_time = False
+
+                # Check for new entry trigger with 7 Institutional Confluences
+                if active_trade is None and is_good_time and chop[i] <= chop_limit:
                     dist_ema21 = abs(bar_close - ema21[i]) / cur_atr
-                    # Factor 9: Overextension / Mean-Reversion Filter (Prevent entries when stretched > 2.8 ATR)
-                    if dist_ema21 > 2.8:
+                    # Factor 9: Overextension / Mean-Reversion Filter (Prevent entries when stretched > 2.2 ATR)
+                    if dist_ema21 > 2.2:
                         continue
 
-                    p1_bull = (bar_close >= ema9[i]) and (ema9[i] >= ema21[i]) and (st_d[i] == 1)
-                    p1_bear = (bar_close <= ema9[i]) and (ema9[i] <= ema21[i]) and (st_d[i] == -1)
+                    e9_val = ema9[i]
+                    e21_val = ema21[i]
+                    e50_val = ema50[i]
+                    rsi_v = rsi_arr[i]
+                    gap_val = abs(e9_val - e21_val) / cur_atr
+                    slp_v = slope_arr[i]
+                    b_ratio = body_arr[i]
 
-                    p2_bull = (cvd_diff[i] >= 0) or (vols[i] >= 1.05 * vol_sma[i] and bar_close >= bar_open)
-                    p2_bear = (cvd_diff[i] <= 0) or (vols[i] >= 1.05 * vol_sma[i] and bar_close <= bar_open)
+                    # Confluence Conditions
+                    is_bull = (
+                        (e9_val >= e21_val)
+                        and (bar_close >= e50_val)
+                        and (bar_close >= e9_val)
+                        and (40.0 <= rsi_v <= 70.0)
+                        and (st_d[i] == 1)
+                        and (gap_val >= min_gap)
+                        and (slp_v > 0.05)
+                        and (b_ratio >= min_body)
+                        and (bar_close > bar_open)
+                    )
 
-                    p3_bull = bar_close >= ema9[i] and bar_close >= bar_open
-                    p3_bear = bar_close <= ema9[i] and bar_close <= bar_open
+                    is_bear = (
+                        (e9_val <= e21_val)
+                        and (bar_close <= e50_val)
+                        and (bar_close <= e9_val)
+                        and (30.0 <= rsi_v <= 60.0)
+                        and (st_d[i] == -1)
+                        and (gap_val >= min_gap)
+                        and (slp_v < -0.05)
+                        and (b_ratio >= min_body)
+                        and (bar_close < bar_open)
+                    )
 
-                    bull_score = (30.0 if p1_bull else 0.0) + (25.0 if p2_bull else 0.0) + (25.0 if p3_bull else 0.0) + (10.0 if chop[i] < 48.0 else 0.0)
-                    bear_score = (30.0 if p1_bear else 0.0) + (25.0 if p2_bear else 0.0) + (25.0 if p3_bear else 0.0) + (10.0 if chop[i] < 48.0 else 0.0)
+                    vol_bull = (cvd_diff[i] >= 0) or (vols[i] >= 1.0 * vol_sma[i] and bar_close >= bar_open)
+                    vol_bear = (cvd_diff[i] <= 0) or (vols[i] >= 1.0 * vol_sma[i] and bar_close <= bar_open)
 
                     exp_move = cur_atr * t1_mult
                     if exp_move >= min_move:
-                        if bull_score >= conf_thresh and bull_score > bear_score:
+                        if is_bull and vol_bull:
                             active_trade = {
                                 "type": "CALL",
                                 "entry_price": bar_close,
                                 "entry_time": bar_time,
                                 "spot_t1": round(bar_close + (t1_mult * cur_atr), 2),
-                                "spot_t2": round(bar_close + ((t1_mult + 1.0) * cur_atr), 2),
+                                "spot_t2": round(bar_close + (t2_mult * cur_atr), 2),
                                 "spot_sl": round(bar_close - (sl_mult * cur_atr), 2),
                                 "t1_hit": False,
-                                "confidence": round(bull_score + 10.0, 1),
+                                "confidence": 85.0,
                             }
-                        elif bear_score >= conf_thresh and bear_score > bull_score:
+                        elif is_bear and vol_bear:
                             active_trade = {
                                 "type": "PUT",
                                 "entry_price": bar_close,
                                 "entry_time": bar_time,
                                 "spot_t1": round(bar_close - (t1_mult * cur_atr), 2),
-                                "spot_t2": round(bar_close - ((t1_mult + 1.0) * cur_atr), 2),
+                                "spot_t2": round(bar_close - (t2_mult * cur_atr), 2),
                                 "spot_sl": round(bar_close + (sl_mult * cur_atr), 2),
                                 "t1_hit": False,
-                                "confidence": round(bear_score + 10.0, 1),
+                                "confidence": 85.0,
                             }
 
             total_trades = len(trades)
@@ -769,10 +820,25 @@ class UnifiedStrategyService:
 
         # 4. Initial Run with standard baseline
         current_conf = 60.0
-        current_chop = 55.0
-        current_t1 = 1.0
-        current_sl = 1.0
-        sim_res = _run_simulation(df, current_conf, current_chop, current_t1, current_sl)
+        current_chop = 52.0
+        current_t1 = 0.75
+        current_t2 = 2.5
+        current_sl = 1.1
+        current_gap = 0.15
+        current_body = 0.40
+        current_kz = True
+
+        sim_res = _run_simulation(
+            df,
+            conf_thresh=current_conf,
+            chop_limit=current_chop,
+            t1_mult=current_t1,
+            t2_mult=current_t2,
+            sl_mult=current_sl,
+            min_gap=current_gap,
+            min_body=current_body,
+            require_kz=current_kz,
+        )
 
         # 5. Auto-Correction Optimization Loop (Grid calibration)
         auto_corrections_applied = []
@@ -780,33 +846,55 @@ class UnifiedStrategyService:
         best_conf = current_conf
         best_chop = current_chop
         best_t1 = current_t1
+        best_t2 = current_t2
         best_sl = current_sl
+        best_gap = current_gap
+        best_body = current_body
+        best_kz = current_kz
 
-        if sim_res["win_rate_pct"] < min_acceptable_winrate:
-            for test_conf in [50.0, 55.0, 60.0, 65.0, 70.0]:
-                for test_chop in [61.8, 55.0, 50.0, 45.0]:
-                    for test_t1 in [0.8, 1.0, 1.2]:
-                        for test_sl in [0.8, 1.0]:
-                            test_res = _run_simulation(df, test_conf, test_chop, test_t1, test_sl)
-                            if test_res["total_trades"] >= 2:
-                                # Prioritize higher win rate and positive net points
-                                is_better_winrate = test_res["win_rate_pct"] > best_res["win_rate_pct"]
-                                is_same_winrate_better_pts = (
-                                    test_res["win_rate_pct"] == best_res["win_rate_pct"]
-                                    and test_res["total_points_gained"] > best_res["total_points_gained"]
-                                )
-                                if is_better_winrate or is_same_winrate_better_pts:
-                                    best_res = test_res
-                                    best_conf = test_conf
-                                    best_chop = test_chop
-                                    best_t1 = test_t1
-                                    best_sl = test_sl
+        if sim_res["win_rate_pct"] < min_acceptable_winrate or sim_res["total_trades"] < 5:
+            for test_chop in [55.0, 52.0, 50.0, 48.0]:
+                for test_gap in [0.10, 0.15, 0.20, 0.25, 0.30]:
+                    for test_body in [0.30, 0.35, 0.40, 0.45, 0.50, 0.55]:
+                        for test_t1 in [0.75, 0.9, 1.0]:
+                            for test_sl in [0.8, 1.0, 1.2, 1.3]:
+                                for test_kz in [True, False]:
+                                    test_res = _run_simulation(
+                                        df,
+                                        conf_thresh=current_conf,
+                                        chop_limit=test_chop,
+                                        t1_mult=test_t1,
+                                        t2_mult=2.5,
+                                        sl_mult=test_sl,
+                                        min_gap=test_gap,
+                                        min_body=test_body,
+                                        require_kz=test_kz,
+                                    )
+                                    if test_res["total_trades"] >= 5:
+                                        # Prioritize higher win rate, profit factor, and positive net points
+                                        is_better_winrate = test_res["win_rate_pct"] > best_res["win_rate_pct"]
+                                        is_same_winrate_better_pf = (
+                                            test_res["win_rate_pct"] == best_res["win_rate_pct"]
+                                            and test_res["profit_factor"] > best_res["profit_factor"]
+                                        )
+                                        is_same_winrate_better_pts = (
+                                            test_res["win_rate_pct"] == best_res["win_rate_pct"]
+                                            and test_res["total_points_gained"] > best_res["total_points_gained"]
+                                        )
+                                        if is_better_winrate or is_same_winrate_better_pf or is_same_winrate_better_pts:
+                                            best_res = test_res
+                                            best_chop = test_chop
+                                            best_gap = test_gap
+                                            best_body = test_body
+                                            best_t1 = test_t1
+                                            best_sl = test_sl
+                                            best_kz = test_kz
 
-            if best_conf != current_conf or best_chop != current_chop or best_t1 != current_t1 or best_sl != current_sl:
+            if best_chop != current_chop or best_t1 != current_t1 or best_sl != current_sl or best_gap != current_gap or best_body != current_body:
                 auto_corrections_applied.append(
-                    f"Auto-Calibrated Parameters: Confidence -> {best_conf}%, Chop Filter -> {best_chop}, "
-                    f"T1 -> {best_t1}x ATR, SL -> {best_sl}x ATR "
-                    f"(Win Rate improved to {best_res['win_rate_pct']}%, Net Gain: +{best_res['total_points_gained']} pts)"
+                    f"Auto-Calibrated Parameters: Chop Filter -> {best_chop}, EMA Gap -> {best_gap}x ATR, "
+                    f"Body Ratio -> {best_body}, T1 -> {best_t1}x ATR, SL -> {best_sl}x ATR, Killzone -> {best_kz} "
+                    f"(Win Rate improved to {best_res['win_rate_pct']}%, Profit Factor: {best_res['profit_factor']}, Net Gain: +{best_res['total_points_gained']} pts)"
                 )
 
             # Store best calibrated parameters for this symbol
@@ -817,13 +905,12 @@ class UnifiedStrategyService:
                 "max_chop_index": best_chop,
                 "t1_multiplier": best_t1,
                 "sl_multiplier": best_sl,
+                "min_gap": best_gap,
+                "min_body": best_body,
+                "killzone_filter": best_kz,
                 "win_rate_achieved": best_res["win_rate_pct"],
                 "total_points_gained": best_res["total_points_gained"],
                 "profit_factor": best_res["profit_factor"],
-            }
-            self.calibrated_symbol_params[canonical] = {
-                "min_confidence_score": best_conf,
-                "max_chop_index": best_chop,
             }
 
         # Extract testing dates from historical DataFrame
